@@ -1,0 +1,177 @@
+import Jersey from '../models/Jersey.model.js';
+import Sale from '../models/Sale.model.js';
+import Purchase from '../models/Purchase.model.js';
+import Wishlist from '../models/Wishlist.model.js';
+import Seller from '../models/Seller.model.js';
+import Reminder from '../models/Reminder.model.js';
+import { createError } from '../middleware/error.middleware.js';
+
+export async function getOverview(req, res, next) {
+  try {
+    const [totalForSale, totalSold, totalPurchased] = await Promise.all([
+      Jersey.countDocuments({ status: 'for_sale' }),
+      Jersey.countDocuments({ status: 'sold' }),
+      Purchase.countDocuments(),
+    ]);
+
+    const salesAgg = await Sale.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$salePrice' },
+          totalBuyCost: { $sum: '$buyPrice' }, // satılan formaların alış bedeli toplamı
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const stockValueAgg = await Jersey.aggregate([
+      { $match: { status: 'for_sale' } },
+      { $group: { _id: null, value: { $sum: { $multiply: ['$sellPrice', '$stockCount'] } } } },
+    ]);
+
+    const totalRevenue = salesAgg[0]?.totalRevenue || 0;
+    const totalBuyCost = salesAgg[0]?.totalBuyCost || 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalForSale,
+        totalSold,
+        totalPurchased,
+        totalRevenue,
+        totalCost: totalBuyCost,
+        netProfit: totalRevenue - totalBuyCost,
+        stockValue: stockValueAgg[0]?.value || 0,
+        totalSales: salesAgg[0]?.count || 0,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMonthlySales(req, res, next) {
+  try {
+    const { year } = req.query;
+    const matchYear = year ? { $expr: { $eq: [{ $year: '$soldAt' }, Number(year)] } } : {};
+
+    const data = await Sale.aggregate([
+      { $match: matchYear },
+      {
+        $group: {
+          _id: { year: { $year: '$soldAt' }, month: { $month: '$soldAt' } },
+          revenue: { $sum: '$salePrice' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      { $addFields: { year: '$_id.year', month: '$_id.month' } },
+      { $project: { _id: 0 } },
+    ]);
+
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getTeamStats(req, res, next) {
+  try {
+    const data = await Sale.aggregate([
+      {
+        $lookup: {
+          from: 'jerseys',
+          localField: 'jerseyId',
+          foreignField: '_id',
+          as: 'jersey',
+        },
+      },
+      { $unwind: '$jersey' },
+      {
+        $group: {
+          _id: '$jersey.teamName',
+          count: { $sum: 1 },
+          revenue: { $sum: '$salePrice' },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+      { $addFields: { teamName: '$_id' } },
+      { $project: { _id: 0 } },
+    ]);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSizeStats(req, res, next) {
+  try {
+    const data = await Sale.aggregate([
+      {
+        $lookup: { from: 'jerseys', localField: 'jerseyId', foreignField: '_id', as: 'jersey' },
+      },
+      { $unwind: '$jersey' },
+      { $group: { _id: '$jersey.size', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $addFields: { size: '$_id' } },
+      { $project: { _id: 0 } },
+    ]);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getPlatformStats(req, res, next) {
+  try {
+    const data = await Sale.aggregate([
+      { $group: { _id: '$platform', count: { $sum: 1 }, revenue: { $sum: '$salePrice' } } },
+      { $sort: { count: -1 } },
+      { $addFields: { platform: '$_id' } },
+      { $project: { _id: 0 } },
+    ]);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getBuyerStats(req, res, next) {
+  try {
+    const data = await Sale.aggregate([
+      { $match: { buyerName: { $exists: true, $ne: '' } } },
+      {
+        $group: {
+          _id: '$buyerName',
+          count: { $sum: 1 },
+          totalSpent: { $sum: '$salePrice' },
+          lastPurchase: { $max: '$soldAt' },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $addFields: { buyerName: '$_id' } },
+      { $project: { _id: 0 } },
+    ]);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getCounts(req, res, next) {
+  try {
+    const [forSale, sold, wishlist, sellers, purchased, remindersOpen] = await Promise.all([
+      Jersey.countDocuments({ status: 'for_sale' }),
+      Sale.countDocuments(),
+      Wishlist.countDocuments(),
+      Seller.countDocuments(),
+      Purchase.countDocuments(),
+      Reminder.countDocuments({ status: 'open' }),
+    ]);
+    res.json({ success: true, data: { forSale, sold, wishlist, sellers, purchased, remindersOpen } });
+  } catch (err) {
+    next(err);
+  }
+}

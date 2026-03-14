@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* Vintage Paper — Light */
+    --bg-primary: #F5F0E8;
+    --bg-secondary: #EDE8DE;
+    --bg-card: #FAF7F2;
+    --text-primary: #2C2416;
+    --text-secondary: #6B5B45;
+    --text-muted: #9C8B76;
+    --accent: #8B4513;
+    --accent-light: #D2691E;
+    --accent-foreground: #FAF7F2;
+    --border: #D4C9B8;
+    --shadow: rgba(44, 36, 22, 0.12);
+    --input: #EDE8DE;
+    --ring: #8B4513;
+
+    /* Shadcn uyumlu değişkenler */
+    --background: 39 33% 92%;
+    --foreground: 33 25% 14%;
+    --card: 39 40% 97%;
+    --card-foreground: 33 25% 14%;
+    --popover: 39 40% 97%;
+    --popover-foreground: 33 25% 14%;
+    --primary: 19 70% 30%;
+    --primary-foreground: 39 40% 97%;
+    --secondary: 36 26% 87%;
+    --secondary-foreground: 33 25% 14%;
+    --muted: 36 26% 87%;
+    --muted-foreground: 29 16% 53%;
+    --accent-var: 22 62% 57%;
+    --accent-var-foreground: 39 40% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border-var: 34 28% 83%;
+    --input-var: 36 26% 87%;
+    --ring-var: 19 70% 30%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --bg-primary: #1A1510;
+    --bg-secondary: #221D16;
+    --bg-card: #2A231A;
+    --text-primary: #F0EAD6;
+    --text-secondary: #C4B99A;
+    --text-muted: #8A7D66;
+    --accent: #C4854A;
+    --accent-light: #E8A06A;
+    --accent-foreground: #1A1510;
+    --border: #3D3326;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --input: #221D16;
+    --ring: #C4854A;
+
+    --background: 33 25% 9%;
+    --foreground: 39 50% 90%;
+    --card: 33 22% 13%;
+    --card-foreground: 39 50% 90%;
+    --popover: 33 22% 13%;
+    --popover-foreground: 39 50% 90%;
+    --primary: 27 60% 53%;
+    --primary-foreground: 33 25% 9%;
+    --secondary: 33 18% 18%;
+    --secondary-foreground: 39 50% 90%;
+    --muted: 33 18% 18%;
+    --muted-foreground: 30 15% 53%;
+    --accent-var: 27 60% 53%;
+    --accent-var-foreground: 33 25% 9%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border-var: 30 17% 24%;
+    --input-var: 33 18% 18%;
+    --ring-var: 27 60% 53%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Geist', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: 'Prata', Georgia, serif;
+  }
+  code, pre, .mono {
+    font-family: 'Geist Mono', monospace;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }

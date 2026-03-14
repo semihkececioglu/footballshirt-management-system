@@ -1,0 +1,395 @@
+{
+  "favorites": [
+    "Süper Lig",
+    "Premier League",
+    "La Liga",
+    "Serie A",
+    "Bundesliga",
+    "Ligue 1",
+    "Champions League",
+    "Europa League",
+    "World Cup",
+    "European Championship"
+  ],
+  "categories": [
+    {
+      "name": "Türkiye",
+      "key": "turkiye",
+      "competitions": [
+        "Süper Lig",
+        "1. Lig",
+        "2. Lig",
+        "3. Lig",
+        "Türkiye Kupası",
+        "Süper Kupa"
+      ]
+    },
+    {
+      "name": "İngiltere",
+      "key": "ingiltere",
+      "competitions": [
+        "Premier League",
+        "Championship",
+        "League One",
+        "League Two",
+        "National League",
+        "FA Cup",
+        "EFL Cup",
+        "Community Shield"
+      ]
+    },
+    {
+      "name": "İspanya",
+      "key": "ispanya",
+      "competitions": [
+        "La Liga",
+        "La Liga 2",
+        "Copa del Rey",
+        "Supercopa de España"
+      ]
+    },
+    {
+      "name": "İtalya",
+      "key": "italya",
+      "competitions": [
+        "Serie A",
+        "Serie B",
+        "Serie C",
+        "Coppa Italia",
+        "Supercoppa Italiana"
+      ]
+    },
+    {
+      "name": "Almanya",
+      "key": "almanya",
+      "competitions": [
+        "Bundesliga",
+        "2. Bundesliga",
+        "3. Liga",
+        "DFB-Pokal",
+        "DFL-Supercup"
+      ]
+    },
+    {
+      "name": "Fransa",
+      "key": "fransa",
+      "competitions": [
+        "Ligue 1",
+        "Ligue 2",
+        "Coupe de France",
+        "Coupe de la Ligue",
+        "Trophée des Champions"
+      ]
+    },
+    {
+      "name": "Portekiz",
+      "key": "portekiz",
+      "competitions": [
+        "Primeira Liga",
+        "Liga Portugal 2",
+        "Taça de Portugal",
+        "Supertaça Cândido de Oliveira"
+      ]
+    },
+    {
+      "name": "Hollanda",
+      "key": "hollanda",
+      "competitions": [
+        "Eredivisie",
+        "Eerste Divisie",
+        "KNVB Cup",
+        "Johan Cruyff Shield"
+      ]
+    },
+    {
+      "name": "Belçika",
+      "key": "belcika",
+      "competitions": [
+        "Pro League",
+        "Challenger Pro League",
+        "Belgian Cup",
+        "Belgian Super Cup"
+      ]
+    },
+    {
+      "name": "İskoçya",
+      "key": "iskocya",
+      "competitions": [
+        "Scottish Premiership",
+        "Scottish Championship",
+        "Scottish Cup",
+        "Scottish League Cup"
+      ]
+    },
+    {
+      "name": "Suudi Arabistan",
+      "key": "suudiArabistan",
+      "competitions": [
+        "Saudi Pro League",
+        "King Cup",
+        "Saudi Super Cup"
+      ]
+    },
+    {
+      "name": "ABD & Kanada",
+      "key": "abdKanada",
+      "competitions": [
+        "MLS",
+        "US Open Cup",
+        "MLS Cup",
+        "Leagues Cup",
+        "Canadian Premier League"
+      ]
+    },
+    {
+      "name": "Meksika",
+      "key": "meksika",
+      "competitions": [
+        "Liga MX",
+        "Liga de Expansión MX",
+        "Copa MX",
+        "Campeón de Campeones"
+      ]
+    },
+    {
+      "name": "Arjantin",
+      "key": "arjantin",
+      "competitions": [
+        "Liga Profesional",
+        "Primera Nacional",
+        "Copa Argentina",
+        "Supercopa Argentina"
+      ]
+    },
+    {
+      "name": "Brezilya",
+      "key": "brezilya",
+      "competitions": [
+        "Série A",
+        "Série B",
+        "Copa do Brasil",
+        "Supercopa do Brasil"
+      ]
+    },
+    {
+      "name": "Japonya",
+      "key": "japonya",
+      "competitions": [
+        "J1 League",
+        "J2 League",
+        "J3 League",
+        "Emperor's Cup",
+        "Japanese Super Cup"
+      ]
+    },
+    {
+      "name": "Avusturya",
+      "key": "avusturya",
+      "competitions": [
+        "Austrian Bundesliga",
+        "2. Liga",
+        "ÖFB-Cup",
+        "Austrian Supercup"
+      ]
+    },
+    {
+      "name": "İsviçre",
+      "key": "isvicre",
+      "competitions": [
+        "Swiss Super League",
+        "Swiss Challenge League",
+        "Swiss Cup"
+      ]
+    },
+    {
+      "name": "Yunanistan",
+      "key": "yunanistan",
+      "competitions": [
+        "Super League Greece",
+        "Super League 2",
+        "Greek Cup"
+      ]
+    },
+    {
+      "name": "Rusya",
+      "key": "rusya",
+      "competitions": [
+        "Russian Premier League",
+        "Russian Cup",
+        "Russian Super Cup"
+      ]
+    },
+    {
+      "name": "Ukrayna",
+      "key": "ukrayna",
+      "competitions": [
+        "Ukrainian Premier League",
+        "Ukrainian Cup",
+        "Ukrainian Super Cup"
+      ]
+    },
+    {
+      "name": "Polonya",
+      "key": "polonya",
+      "competitions": [
+        "Ekstraklasa",
+        "I Liga",
+        "Polish Cup",
+        "Polish Super Cup"
+      ]
+    },
+    {
+      "name": "Romanya",
+      "key": "romanya",
+      "competitions": [
+        "Liga I",
+        "Liga II",
+        "Cupa României",
+        "Supercupa României"
+      ]
+    },
+    {
+      "name": "Çekya",
+      "key": "cekya",
+      "competitions": [
+        "Czech First League",
+        "Czech Cup"
+      ]
+    },
+    {
+      "name": "Hırvatistan",
+      "key": "hirvatistan",
+      "competitions": [
+        "Hrvatska Nogometna Liga",
+        "Croatian Cup",
+        "Croatian Super Cup"
+      ]
+    },
+    {
+      "name": "Sırbistan",
+      "key": "sirbistan",
+      "competitions": [
+        "Serbian SuperLiga",
+        "Serbian Cup"
+      ]
+    },
+    {
+      "name": "Danimarka",
+      "key": "danimarka",
+      "competitions": [
+        "Danish Superliga",
+        "Danish Cup"
+      ]
+    },
+    {
+      "name": "İsveç",
+      "key": "isvec",
+      "competitions": [
+        "Allsvenskan",
+        "Superettan",
+        "Svenska Cupen"
+      ]
+    },
+    {
+      "name": "Norveç",
+      "key": "norvec",
+      "competitions": [
+        "Eliteserien",
+        "Norwegian Cup"
+      ]
+    },
+    {
+      "name": "Çin",
+      "key": "cin",
+      "competitions": [
+        "Chinese Super League",
+        "China League One",
+        "Chinese FA Cup"
+      ]
+    },
+    {
+      "name": "Güney Kore",
+      "key": "guneyKore",
+      "competitions": [
+        "K League 1",
+        "K League 2",
+        "Korean FA Cup"
+      ]
+    },
+    {
+      "name": "Avustralya",
+      "key": "avustralya",
+      "competitions": [
+        "A-League",
+        "Australia Cup"
+      ]
+    },
+    {
+      "name": "UEFA Kulüp",
+      "key": "uefaKulup",
+      "competitions": [
+        "Champions League",
+        "Europa League",
+        "Conference League",
+        "UEFA Super Cup",
+        "UEFA Cup",
+        "European Cup",
+        "Cup Winners' Cup"
+      ]
+    },
+    {
+      "name": "Uluslararası Milli",
+      "key": "uluslararasiMilli",
+      "competitions": [
+        "World Cup",
+        "European Championship",
+        "Copa America",
+        "Africa Cup of Nations",
+        "Asian Cup",
+        "CONCACAF Gold Cup",
+        "UEFA Nations League",
+        "World Cup Qualifiers",
+        "Euro Qualifiers",
+        "Confederations Cup"
+      ]
+    },
+    {
+      "name": "Afrika Kulüp",
+      "key": "afrikaKulup",
+      "competitions": [
+        "CAF Champions League",
+        "CAF Confederation Cup",
+        "CAF Super Cup"
+      ]
+    },
+    {
+      "name": "Asya Kulüp",
+      "key": "asyaKulup",
+      "competitions": [
+        "AFC Champions League",
+        "AFC Cup"
+      ]
+    },
+    {
+      "name": "Güney Amerika Kulüp",
+      "key": "guneyAmerikaKulup",
+      "competitions": [
+        "Copa Libertadores",
+        "Copa Sudamericana",
+        "Recopa Sudamericana"
+      ]
+    },
+    {
+      "name": "Diğer",
+      "key": "diger",
+      "competitions": [
+        "Club World Cup",
+        "Intercontinental Cup",
+        "International Champions Cup",
+        "Friendly Match",
+        "Pre-season Tournament",
+        "Testimonial Match"
+      ]
+    }
+  ]
+}

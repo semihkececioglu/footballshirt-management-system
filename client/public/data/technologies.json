@@ -1,0 +1,14 @@
+{
+  "Nike": ["Dri-FIT", "DRI-FIT ADV", "Dri-FIT Strike", "Therma-FIT", "AeroSwift", "Vaporknit", "AERO-FIT", "Standart"],
+  "Adidas": ["Aeroready", "Heat.rdy", "Condivo", "Climacool", "Climacool+", "Tiro", "Standart"],
+  "Puma": ["Drycell", "teamGOAL", "teamLIGA", "teamRISE", "Ultraweave", "Standart"],
+  "Castore": ["TechPro", "Velocity", "HyperFibre", "Standart"],
+  "Umbro": ["Triaction", "Pro Training", "Standart"],
+  "Jako": ["Comfort 2.0", "Comfort Light 2.0", "Standart"],
+  "Kappa": ["Kombat", "4soccer", "Standart"],
+  "Hummel": ["DBU Breathable", "PolyWick", "Standart"],
+  "New Balance": ["NB Dry", "TechRide", "Standart"],
+  "Macron": ["Ecoactive", "P.A.S.", "Standart"],
+  "Errea": ["Impact+", "Standart"],
+  "generic": ["Standart"]
+}
