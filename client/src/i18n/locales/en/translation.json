@@ -72,6 +72,7 @@
   },
   "products": {
     "defaultTitle": "Jersey Collection",
+    "allOriginalBanner": "All products are authentic originals.",
     "searchPlaceholder": "Search team",
     "jerseyCount": "{{count}} jerseys",
     "featured": "Featured",

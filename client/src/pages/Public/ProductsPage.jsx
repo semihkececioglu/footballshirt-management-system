@@ -403,6 +403,11 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
+      {/* Authenticity banner */}
+      <div className="bg-[var(--accent)] text-[var(--accent-foreground)] text-center text-xs py-2 px-4 font-medium tracking-wide">
+        {t('products.allOriginalBanner')}
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border)]">
         {/* Main row */}

@@ -72,6 +72,7 @@
   },
   "products": {
     "defaultTitle": "ildivincodino",
+    "allOriginalBanner": "Tüm ürünler orijinaldir.",
     "searchPlaceholder": "Takım ara...",
     "jerseyCount": "{{count}} forma",
     "featured": "Öne Çıkanlar",
