@@ -53,7 +53,12 @@ export async function getJerseys(req, res, next) {
       if (maxPrice) filter.sellPrice.$lte = Number(maxPrice);
     }
     if (search) {
-      andClauses.push({ teamName: { $regex: search, $options: 'i' } });
+      andClauses.push({
+        $or: [
+          { teamName: { $regex: search, $options: 'i' } },
+          { notes: { $regex: search, $options: 'i' } },
+        ],
+      });
     }
 
     if (andClauses.length > 0) filter.$and = andClauses;
