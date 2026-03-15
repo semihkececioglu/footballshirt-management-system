@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Search, SlidersHorizontal, X, LayoutGrid, List, Star, ShoppingBag, MessageCircle, AtSign, Link2, ExternalLink, Moon, Sun, Check,
+  Search, SlidersHorizontal, X, LayoutGrid, List, Star, ShoppingBag, MessageCircle,
+  AtSign, Link2, ExternalLink, Moon, Sun, Check, Menu,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useLanguageStore, LANGUAGES } from '@/store/languageStore';
@@ -10,7 +11,7 @@ import { useCurrencyStore, CURRENCIES } from '@/store/currencyStore';
 import { publicService } from '@/services/api';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { JerseyCard } from '@/components/common/JerseyCard/JerseyCard';
 import { JerseyDetailDialog } from '@/components/common/JerseyDetail/JerseyDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -176,6 +177,7 @@ export default function ProductsPage() {
   const appliedFilters = filtersFromParams(searchParams);
 
   // Local state (not in URL)
+  const searchRef = useRef(null);
   const [jerseys, setJerseys] = useState([]);
   const [pinnedJerseys, setPinnedJerseys] = useState([]);
   const [total, setTotal] = useState(0);
@@ -183,8 +185,6 @@ export default function ProductsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [pendingFilters, setPendingFilters] = useState(EMPTY_FILTERS);
   const [detailJersey, setDetailJersey] = useState(null);
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [searchModalInput, setSearchModalInput] = useState('');
   const [filterOptions, setFilterOptions] = useState({
     types: [], qualities: [], conditions: [], brands: [], leagues: [], seasons: [], primaryColors: [],
   });
@@ -319,144 +319,134 @@ export default function ProductsPage() {
     : jerseys;
   const allLabel = t('common.all');
 
+  function FilterPopover() {
+    return (
+      <Popover open={filterOpen} onOpenChange={(o) => { if (o) handleOpenFilter(); else setFilterOpen(false); }}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="icon" className="relative flex-shrink-0">
+            <SlidersHorizontal size={16} />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px]">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72" align="end">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">{t('products.filters')}</p>
+            <FSel label={t('products.team')} value={pendingFilters.team} opts={teams} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, team: v }))} />
+            <div className="grid grid-cols-2 gap-2">
+              <FSel label={t('products.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
+              <FSel label={t('products.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
+              <FSel label={t('products.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
+              <FSel label={t('products.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
+              <FSel label={t('products.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
+              <FSel label={t('products.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
+              <FSel label={t('products.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
+            </div>
+            {filterOptions.primaryColors.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">{t('products.primaryColor')}</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.primaryColors.map((hex) => {
+                    const rawName = JERSEY_COLORS.find((c) => c.hex === hex)?.name ?? hex;
+                    const name = translateColor(rawName);
+                    const isSelected = pendingFilters.primaryColor === hex;
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 128;
+                    return (
+                      <button
+                        key={hex}
+                        type="button"
+                        title={name}
+                        onClick={() => setPendingFilters((p) => ({ ...p, primaryColor: p.primaryColor === hex ? '' : hex }))}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none"
+                        style={{
+                          backgroundColor: hex,
+                          border: isSelected ? '2px solid var(--accent)' : isLight ? '1.5px solid #d1d5db' : '1.5px solid transparent',
+                          boxShadow: isSelected ? '0 0 0 1.5px var(--accent)' : undefined,
+                        }}
+                      >
+                        {isSelected && <Check size={11} strokeWidth={3} style={{ color: isLight ? '#111' : '#fff' }} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <div className="space-y-1">
+              <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
+              <div className="flex gap-2 items-center">
+                <Input type="number" placeholder={t('products.priceMin')} value={pendingFilters.minPrice}
+                  onChange={(e) => setPendingFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
+                  className="h-8 text-xs" />
+                <span className="text-[var(--text-muted)] text-xs">–</span>
+                <Input type="number" placeholder={t('products.priceMax')} value={pendingFilters.maxPrice}
+                  onChange={(e) => setPendingFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
+                  className="h-8 text-xs" />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1">
+                <X size={13} /> {t('common.clear')}
+              </Button>
+              <Button size="sm" onClick={applyFilters} className="flex-1">{t('common.apply')}</Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 whitespace-nowrap">
-            <img src="/logo.png" alt="logo" className="h-9 w-9 object-contain rounded-full" />
-            <h1 className="font-display text-xl font-bold text-[var(--text-primary)]">
+        {/* Main row */}
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+          {/* Logo + Title */}
+          <div className="flex items-center gap-2.5 whitespace-nowrap flex-shrink-0">
+            <img src="/logo.png" alt="logo" className="h-8 w-8 object-contain rounded-full" />
+            <h1 className="font-display text-lg font-bold text-[var(--text-primary)] hidden sm:block">
+              {storeTitle || t('products.defaultTitle')}
+            </h1>
+            <h1 className="font-display text-base font-bold text-[var(--text-primary)] sm:hidden">
               {storeTitle || t('products.defaultTitle')}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 flex-1 max-w-md">
-            {/* Desktop search */}
-            <div className="relative flex-1 hidden sm:block">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-              <Input
-                placeholder={t('products.searchPlaceholder')}
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-
-            {/* Mobile search icon */}
-            <Button
-              variant="outline"
-              size="icon"
-              className={`sm:hidden flex-shrink-0 relative ${search ? 'border-[var(--accent)] text-[var(--accent)]' : ''}`}
-              onClick={() => { setSearchModalInput(search); setSearchModalOpen(true); }}
-              aria-label={t('common.search')}
-            >
-              <Search size={16} />
-              {search && (
-                <span className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-[var(--accent)]" />
-              )}
-            </Button>
-
-            <Popover open={filterOpen} onOpenChange={(o) => { if (o) handleOpenFilter(); else setFilterOpen(false); }}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="relative flex-shrink-0">
-                  <SlidersHorizontal size={16} />
-                  {activeFilterCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px]">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72" align="end">
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold">{t('products.filters')}</p>
-
-                  <FSel
-                    label={t('products.team')}
-                    value={pendingFilters.team}
-                    opts={teams}
-                    allLabel={allLabel}
-                    onChange={(v) => setPendingFilters((p) => ({ ...p, team: v }))}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <FSel label={t('products.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
-                    <FSel label={t('products.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
-                    <FSel label={t('products.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
-                    <FSel label={t('products.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
-                    <FSel label={t('products.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
-                    <FSel label={t('products.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
-                    <FSel label={t('products.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
-                  </div>
-                  {filterOptions.primaryColors.length > 0 && (
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">{t('products.primaryColor')}</Label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {filterOptions.primaryColors.map((hex) => {
-                          const rawName = JERSEY_COLORS.find((c) => c.hex === hex)?.name ?? hex;
-                          const name = translateColor(rawName);
-                          const isSelected = pendingFilters.primaryColor === hex;
-                          const r = parseInt(hex.slice(1, 3), 16);
-                          const g = parseInt(hex.slice(3, 5), 16);
-                          const b = parseInt(hex.slice(5, 7), 16);
-                          const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 128;
-                          return (
-                            <button
-                              key={hex}
-                              type="button"
-                              title={name}
-                              onClick={() => setPendingFilters((p) => ({ ...p, primaryColor: p.primaryColor === hex ? '' : hex }))}
-                              className="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none"
-                              style={{
-                                backgroundColor: hex,
-                                border: isSelected
-                                  ? '2px solid var(--accent)'
-                                  : isLight ? '1.5px solid #d1d5db' : '1.5px solid transparent',
-                                boxShadow: isSelected ? '0 0 0 1.5px var(--accent)' : undefined,
-                              }}
-                            >
-                              {isSelected && (
-                                <Check size={11} strokeWidth={3} style={{ color: isLight ? '#111' : '#fff' }} />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
-                    <div className="flex gap-2 items-center">
-                      <Input type="number" placeholder={t('products.priceMin')} value={pendingFilters.minPrice}
-                        onChange={(e) => setPendingFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
-                        className="h-8 text-xs" />
-                      <span className="text-[var(--text-muted)] text-xs">–</span>
-                      <Input type="number" placeholder={t('products.priceMax')} value={pendingFilters.maxPrice}
-                        onChange={(e) => setPendingFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
-                        className="h-8 text-xs" />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1">
-                      <X size={13} /> {t('common.clear')}
-                    </Button>
-                    <Button size="sm" onClick={applyFilters} className="flex-1">{t('common.apply')}</Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+          {/* Desktop search */}
+          <div className="hidden sm:flex flex-1 max-w-lg relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+            <Input
+              ref={searchRef}
+              placeholder={t('products.searchPlaceholder')}
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 pr-9 h-9 bg-[var(--bg-primary)] focus-visible:ring-[var(--accent)]"
+            />
+            {search && (
+              <button
+                onClick={() => { handleSearch(''); searchRef.current?.focus(); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* Desktop: contact links */}
             {contactLinks.length > 0 && (
-              <div className="hidden sm:flex items-center gap-2 mr-2">
+              <div className="hidden sm:flex items-center gap-2 mr-1">
                 {contactLinks.map(({ platform, label, link }) => {
                   const Icon = getPlatformIcon(platform);
                   return (
-                    <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="cursor-pointer">
-                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
+                    <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer">
+                      <Button variant="outline" size="sm" className="gap-1.5">
                         <Icon size={14} /> {label || platform} <ExternalLink size={11} className="opacity-60" />
                       </Button>
                     </a>
@@ -465,8 +455,13 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {/* Language toggle */}
-            <div className="flex rounded-lg border border-[var(--border)] overflow-hidden">
+            {/* Desktop: filter */}
+            <div className="hidden sm:block">
+              <FilterPopover />
+            </div>
+
+            {/* Desktop: language */}
+            <div className="hidden sm:flex rounded-lg border border-[var(--border)] overflow-hidden">
               {LANGUAGES.map((l) => (
                 <button
                   key={l.code}
@@ -484,14 +479,97 @@ export default function ProductsPage() {
               ))}
             </div>
 
-            {/* Theme toggle */}
+            {/* Desktop: theme */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] transition-colors"
+              className="hidden sm:flex p-2 rounded-lg hover:bg-[var(--bg-primary)] text-[var(--text-secondary)] transition-colors"
               aria-label={t('common.changeTheme')}
             >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+              {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
             </button>
+
+            {/* Mobile: filter */}
+            <div className="sm:hidden">
+              <FilterPopover />
+            </div>
+
+            {/* Mobile: hamburger */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="sm:hidden h-9 w-9">
+                  <Menu size={17} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-3 space-y-3">
+                {/* Language */}
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-1.5">{t('settings.language')}</p>
+                  <div className="flex rounded-lg border border-[var(--border)] overflow-hidden">
+                    {LANGUAGES.map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => setLanguage(l.code)}
+                        className={cn(
+                          'flex-1 py-1.5 text-xs font-medium transition-colors',
+                          language === l.code
+                            ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                            : 'text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]'
+                        )}
+                      >
+                        {l.flag} {l.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Theme */}
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-1.5">{t('settings.theme')}</p>
+                  <button
+                    onClick={toggleTheme}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-secondary)] transition-colors text-sm text-[var(--text-primary)]"
+                  >
+                    {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
+                    {theme === 'light' ? t('settings.themeDark') : t('settings.themeLight')}
+                  </button>
+                </div>
+
+                {/* Contact links */}
+                {contactLinks.length > 0 && (
+                  <div className="space-y-1.5 border-t border-[var(--border)] pt-3">
+                    {contactLinks.map(({ platform, label, link }) => {
+                      const Icon = getPlatformIcon(platform);
+                      return (
+                        <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-sm text-[var(--text-primary)]">
+                          <Icon size={15} /> {label || platform} <ExternalLink size={11} className="opacity-50 ml-auto" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Mobile search row */}
+        <div className="sm:hidden px-4 pb-3">
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+            <Input
+              placeholder={t('products.searchPlaceholder')}
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 pr-9 h-10 bg-[var(--bg-primary)] focus-visible:ring-[var(--accent)] text-sm"
+            />
+            {search && (
+              <button
+                onClick={() => handleSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -631,45 +709,6 @@ export default function ProductsPage() {
           })}
         </div>
       )}
-
-      {/* Mobile Search Modal */}
-      <Dialog open={searchModalOpen} onOpenChange={(o) => { if (!o) setSearchModalOpen(false); }}>
-        <DialogContent className="max-w-sm">
-          <div className="relative mt-2">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-            <Input
-              autoFocus
-              placeholder={t('products.searchPlaceholder')}
-              value={searchModalInput}
-              onChange={(e) => setSearchModalInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(searchModalInput);
-                  setSearchModalOpen(false);
-                }
-              }}
-              className="pl-8"
-            />
-          </div>
-          <div className="flex gap-2 mt-1">
-            {searchModalInput && (
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                setSearchModalInput('');
-                handleSearch('');
-                setSearchModalOpen(false);
-              }}>
-                <X size={13} /> {t('common.clear')}
-              </Button>
-            )}
-            <Button size="sm" className="flex-1" onClick={() => {
-              handleSearch(searchModalInput);
-              setSearchModalOpen(false);
-            }}>
-              {t('common.search')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Detail Dialog */}
       <JerseyDetailDialog
