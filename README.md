@@ -13,6 +13,9 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 ### Public Storefront
 ![Storefront](screenshots/storefront.png)
 
+### Login
+![Login](screenshots/login.png)
+
 ### For Sale — Inventory Management
 ![For Sale](screenshots/for-sale.png)
 
