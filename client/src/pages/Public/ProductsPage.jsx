@@ -458,10 +458,8 @@ export default function ProductsPage() {
               </div>
             )}
 
-            {/* Desktop: filter */}
-            <div className="hidden sm:block">
-              {filterPopover}
-            </div>
+            {/* Filter — always single instance */}
+            {filterPopover}
 
             {/* Desktop: language */}
             <div className="hidden sm:flex rounded-lg border border-[var(--border)] overflow-hidden">
@@ -490,11 +488,6 @@ export default function ProductsPage() {
             >
               {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
             </button>
-
-            {/* Mobile: filter */}
-            <div className="sm:hidden">
-              {filterPopover}
-            </div>
 
             {/* Mobile: hamburger */}
             <DropdownMenu>
