@@ -54,7 +54,7 @@ export default function RemindersPage() {
     { key: 'open', label: t('reminders.tab.open') },
     { key: 'notified', label: t('reminders.tab.notified') },
     { key: 'closed', label: t('reminders.tab.closed') },
-    { key: '', label: t('common.all') },
+    { key: 'all', label: t('common.all') },
   ];
 
   const [reminders, setReminders] = useState([]);
@@ -91,7 +91,7 @@ export default function RemindersPage() {
   const load = useCallback(async (status) => {
     setLoading(true);
     try {
-      const params = status ? { status } : {};
+      const params = (status && status !== 'all') ? { status } : {};
       const res = await reminderService.getAll(params);
       setReminders(res.data.data || res.data);
     } catch {

@@ -64,7 +64,7 @@ export default function WishlistPage() {
     { key: 'active', label: t('wishlist.tab.active') },
     { key: 'purchased', label: t('wishlist.tab.purchased') },
     { key: 'cancelled', label: t('wishlist.tab.cancelled') },
-    { key: '', label: t('common.all') },
+    { key: 'all', label: t('common.all') },
   ];
 
   const [items, setItems] = useState([]);
@@ -110,7 +110,7 @@ export default function WishlistPage() {
   const load = useCallback(async (status) => {
     setLoading(true);
     try {
-      const params = status ? { status } : {};
+      const params = (status && status !== 'all') ? { status } : {};
       const res = await wishlistService.getAll(params);
       setItems(res.data.data || res.data);
     } catch {
