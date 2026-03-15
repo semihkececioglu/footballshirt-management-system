@@ -142,7 +142,7 @@ export default function Sidebar({ onClose }) {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-primary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <Eye size={18} />
-          <span>{t("nav.goToVitrin")}</span>
+          <span>{t("nav.goToProducts")}</span>
         </a>
       </div>
     </nav>

@@ -12,7 +12,7 @@ const contactLinkSchema = new mongoose.Schema(
 const settingsSchema = new mongoose.Schema(
   {
     _id: { type: String, default: "singleton" },
-    vitrinTitle: { type: String, default: "ildivincodino" },
+    storeTitle: { type: String, default: "ildivincodino" },
     contactLinks: [contactLinkSchema],
     language: { type: String, default: "en", enum: ["tr", "en"] },
     currency: {

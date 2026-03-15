@@ -4,7 +4,7 @@ export async function getSettings(req, res, next) {
   try {
     const settings = await Settings.findOneAndUpdate(
       { _id: 'singleton' },
-      { $setOnInsert: { vitrinTitle: 'Forma Koleksiyonu', contactLinks: [], language: 'tr', currency: 'TRY' } },
+      { $setOnInsert: { storeTitle: 'Forma Koleksiyonu', contactLinks: [], language: 'tr', currency: 'TRY' } },
       { upsert: true, new: true }
     );
     res.json({ success: true, data: settings });
@@ -15,9 +15,9 @@ export async function getSettings(req, res, next) {
 
 export async function updateSettings(req, res, next) {
   try {
-    const { vitrinTitle, contactLinks, language, currency } = req.body;
+    const { storeTitle, contactLinks, language, currency } = req.body;
     const update = {};
-    if (vitrinTitle !== undefined) update.vitrinTitle = vitrinTitle;
+    if (storeTitle !== undefined) update.storeTitle = storeTitle;
     if (contactLinks !== undefined) update.contactLinks = contactLinks;
     if (language !== undefined) update.language = language;
     if (currency !== undefined) update.currency = currency;

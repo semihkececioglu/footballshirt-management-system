@@ -129,7 +129,7 @@ router.get('/teams', async (req, res, next) => {
 router.get('/settings', async (req, res, next) => {
   try {
     const settings = await Settings.findOne({ _id: 'singleton' });
-    res.json({ success: true, data: settings || { vitrinTitle: 'Forma Koleksiyonu', contactLinks: [] } });
+    res.json({ success: true, data: settings || { storeTitle: 'Forma Koleksiyonu', contactLinks: [] } });
   } catch (err) {
     next(err);
   }

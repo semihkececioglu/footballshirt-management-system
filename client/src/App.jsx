@@ -16,7 +16,7 @@ import ReportsPage from '@/pages/Reports/ReportsPage';
 import RemindersPage from '@/pages/Reminders/RemindersPage';
 import PlannerPage from '@/pages/Planner/PlannerPage';
 import SettingsPage from '@/pages/Settings/SettingsPage';
-import VitrinPage from '@/pages/Public/VitrinPage';
+import ProductsPage from '@/pages/Public/ProductsPage';
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -47,7 +47,7 @@ export default function App() {
       <Toaster position="top-right" richColors closeButton />
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
-        <Route path="/products" element={<VitrinPage />} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route
           path="/"
           element={

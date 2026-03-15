@@ -47,7 +47,7 @@
   "app": {
     "title": "Football Jersey Manager",
     "subtitle": "Collection & Sales",
-    "goToVitrin": "Go to Storefront",
+    "goToProducts": "Go to Storefront",
     "settings": "Settings"
   },
   "nav": {
@@ -61,7 +61,7 @@
     "reminders": "Reminders",
     "planner": "Planner",
     "settings": "Settings",
-    "goToVitrin": "Go to Storefront"
+    "goToProducts": "Go to Storefront"
   },
   "login": {
     "username": "Username",
@@ -70,7 +70,7 @@
     "loading": "Signing in...",
     "error": "Incorrect username or password"
   },
-  "vitrin": {
+  "products": {
     "defaultTitle": "Jersey Collection",
     "searchPlaceholder": "Search team",
     "jerseyCount": "{{count}} jerseys",
@@ -921,9 +921,9 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "vitrin": "Storefront Settings",
-    "vitrinTitle": "Storefront Title",
-    "vitrinTitlePlaceholder": "My Jersey Collection",
+    "products": "Storefront Settings",
+    "storeTitle": "Storefront Title",
+    "storeTitlePlaceholder": "My Jersey Collection",
     "contactLinks": "Contact Links",
     "addLink": "Add Link",
     "noLinks": "No links added yet",

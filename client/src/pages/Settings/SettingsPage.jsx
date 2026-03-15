@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const { language, setLanguage } = useLanguageStore();
   const { currency, setCurrency } = useCurrencyStore();
 
-  const [vitrinTitle, setVitrinTitle] = useState('');
+  const [storeTitle, setVitrinTitle] = useState('');
   const [contactLinks, setContactLinks] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,7 @@ export default function SettingsPage() {
     settingsService.get()
       .then((res) => {
         const data = res.data.data || res.data || {};
-        setVitrinTitle(data.vitrinTitle || '');
+        setVitrinTitle(data.storeTitle || '');
         setContactLinks(data.contactLinks ? data.contactLinks.map((l) => ({ ...l })) : []);
       })
       .catch(() => toast.error(t('settings.loadError')))
@@ -63,7 +63,7 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await settingsService.update({
-        vitrinTitle,
+        storeTitle,
         contactLinks: contactLinks.filter((l) => l.platform && l.link),
       });
       toast.success(t('settings.saved'));
@@ -166,13 +166,13 @@ export default function SettingsPage() {
         {/* Vitrin Title */}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
-            {t('settings.vitrin')}
+            {t('settings.storefront')}
           </h2>
-          <FormField label={t('settings.vitrinTitle')}>
+          <FormField label={t('settings.storeTitle')}>
             <Input
-              value={vitrinTitle}
+              value={storeTitle}
               onChange={(e) => setVitrinTitle(e.target.value)}
-              placeholder={t('settings.vitrinTitlePlaceholder')}
+              placeholder={t('settings.storeTitlePlaceholder')}
             />
           </FormField>
         </div>

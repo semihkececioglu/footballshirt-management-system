@@ -110,7 +110,7 @@ function ListRow({ jersey, onClick }) {
         </div>
 
         {jersey.productCode && (
-          <p className="text-[10px] text-[var(--text-muted)] mt-1">{t('vitrin.productCode')}: {jersey.productCode}</p>
+          <p className="text-[10px] text-[var(--text-muted)] mt-1">{t('products.productCode')}: {jersey.productCode}</p>
         )}
       </div>
 
@@ -119,7 +119,7 @@ function ListRow({ jersey, onClick }) {
         {jersey.sellPrice > 0 ? (
           <p className="text-base font-bold text-[var(--accent)]">{formatCurrency(jersey.sellPrice)}</p>
         ) : (
-          <span className="text-xs text-[var(--text-muted)]">{t('vitrin.noPrice')}</span>
+          <span className="text-xs text-[var(--text-muted)]">{t('products.noPrice')}</span>
         )}
       </div>
     </div>
@@ -145,7 +145,7 @@ function FSel({
   );
 }
 
-export default function VitrinPage() {
+export default function ProductsPage() {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguageStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -190,7 +190,7 @@ export default function VitrinPage() {
   });
   const [teams, setTeams] = useState([]);
   const [contactLinks, setContactLinks] = useState([]);
-  const [vitrinTitle, setVitrinTitle] = useState('');
+  const [storeTitle, setVitrinTitle] = useState('');
   const LIMIT = 24;
 
   function setParam(key, value, replace = true) {
@@ -224,7 +224,7 @@ export default function VitrinPage() {
       .then((res) => {
         const s = res.data.data || res.data || {};
         setContactLinks(s.contactLinks || []);
-        if (s.vitrinTitle) setVitrinTitle(s.vitrinTitle);
+        if (s.storeTitle) setVitrinTitle(s.storeTitle);
       })
       .catch(() => {});
   }, []);
@@ -324,16 +324,19 @@ export default function VitrinPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <h1 className="font-display text-xl font-bold text-[var(--text-primary)] whitespace-nowrap">
-            {vitrinTitle || t('vitrin.defaultTitle')}
-          </h1>
+          <div className="flex items-center gap-2.5 whitespace-nowrap">
+            <img src="/logo.png" alt="logo" className="h-9 w-9 object-contain rounded-full" />
+            <h1 className="font-display text-xl font-bold text-[var(--text-primary)]">
+              {storeTitle || t('products.defaultTitle')}
+            </h1>
+          </div>
 
           <div className="flex items-center gap-2 flex-1 max-w-md">
             {/* Desktop search */}
             <div className="relative flex-1 hidden sm:block">
               <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <Input
-                placeholder={t('vitrin.searchPlaceholder')}
+                placeholder={t('products.searchPlaceholder')}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-8"
@@ -367,10 +370,10 @@ export default function VitrinPage() {
               </PopoverTrigger>
               <PopoverContent className="w-72" align="end">
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold">{t('vitrin.filters')}</p>
+                  <p className="text-sm font-semibold">{t('products.filters')}</p>
 
                   <FSel
-                    label={t('vitrin.team')}
+                    label={t('products.team')}
                     value={pendingFilters.team}
                     opts={teams}
                     allLabel={allLabel}
@@ -378,17 +381,17 @@ export default function VitrinPage() {
                   />
 
                   <div className="grid grid-cols-2 gap-2">
-                    <FSel label={t('vitrin.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
-                    <FSel label={t('vitrin.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
-                    <FSel label={t('vitrin.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
-                    <FSel label={t('vitrin.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
-                    <FSel label={t('vitrin.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
-                    <FSel label={t('vitrin.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
-                    <FSel label={t('vitrin.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
+                    <FSel label={t('products.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
+                    <FSel label={t('products.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
+                    <FSel label={t('products.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
+                    <FSel label={t('products.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
+                    <FSel label={t('products.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
+                    <FSel label={t('products.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
+                    <FSel label={t('products.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
                   </div>
                   {filterOptions.primaryColors.length > 0 && (
                     <div className="space-y-1.5">
-                      <Label className="text-xs">{t('vitrin.primaryColor')}</Label>
+                      <Label className="text-xs">{t('products.primaryColor')}</Label>
                       <div className="flex flex-wrap gap-1.5">
                         {filterOptions.primaryColors.map((hex) => {
                           const rawName = JERSEY_COLORS.find((c) => c.hex === hex)?.name ?? hex;
@@ -424,13 +427,13 @@ export default function VitrinPage() {
                   )}
 
                   <div className="space-y-1">
-                    <Label className="text-xs">{t('vitrin.priceRange', { symbol })}</Label>
+                    <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
                     <div className="flex gap-2 items-center">
-                      <Input type="number" placeholder={t('vitrin.priceMin')} value={pendingFilters.minPrice}
+                      <Input type="number" placeholder={t('products.priceMin')} value={pendingFilters.minPrice}
                         onChange={(e) => setPendingFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
                         className="h-8 text-xs" />
                       <span className="text-[var(--text-muted)] text-xs">–</span>
-                      <Input type="number" placeholder={t('vitrin.priceMax')} value={pendingFilters.maxPrice}
+                      <Input type="number" placeholder={t('products.priceMax')} value={pendingFilters.maxPrice}
                         onChange={(e) => setPendingFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
                         className="h-8 text-xs" />
                     </div>
@@ -517,7 +520,7 @@ export default function VitrinPage() {
               <button
                 key={key}
                 onClick={() => setParam('view', key === 'grid' ? null : key)}
-                aria-label={key === 'grid' ? t('vitrin.gridView') : t('vitrin.listView')}
+                aria-label={key === 'grid' ? t('products.gridView') : t('products.listView')}
                 className={cn(
                   'flex items-center justify-center w-8 h-8 transition-colors',
                   view === key
@@ -545,8 +548,8 @@ export default function VitrinPage() {
           </div>
         ) : jerseys.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-[var(--text-muted)]">
-            <p className="text-lg">{t('vitrin.empty')}</p>
-            <p className="text-sm mt-1">{t('vitrin.emptyHint')}</p>
+            <p className="text-lg">{t('products.empty')}</p>
+            <p className="text-sm mt-1">{t('products.emptyHint')}</p>
           </div>
         ) : (
           <>
@@ -557,7 +560,7 @@ export default function VitrinPage() {
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-400/30 bg-amber-400/10">
                     <Star size={15} className="fill-amber-400 text-amber-400 flex-shrink-0" />
                     <h2 className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                      {t('vitrin.featured')}
+                      {t('products.featured')}
                     </h2>
                     <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-700 dark:text-amber-400 font-medium border border-amber-400/30">
                       {pinnedJerseys.length}
@@ -581,7 +584,7 @@ export default function VitrinPage() {
                 </div>
 
                 {regularJerseys.length > 0 && (
-                  <h2 className="text-sm font-medium text-[var(--text-muted)] mb-4">{t('vitrin.allJerseys')}</h2>
+                  <h2 className="text-sm font-medium text-[var(--text-muted)] mb-4">{t('products.allJerseys')}</h2>
                 )}
               </div>
             )}
@@ -636,7 +639,7 @@ export default function VitrinPage() {
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <Input
               autoFocus
-              placeholder={t('vitrin.searchPlaceholder')}
+              placeholder={t('products.searchPlaceholder')}
               value={searchModalInput}
               onChange={(e) => setSearchModalInput(e.target.value)}
               onKeyDown={(e) => {

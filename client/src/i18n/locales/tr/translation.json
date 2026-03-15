@@ -47,7 +47,7 @@
   "app": {
     "title": "Football Jersey Manager",
     "subtitle": "Koleksiyon & Satış",
-    "goToVitrin": "Vitrine Git",
+    "goToProducts": "Vitrine Git",
     "settings": "Ayarlar"
   },
   "nav": {
@@ -61,7 +61,7 @@
     "reminders": "Hatırlatıcılar",
     "planner": "Planlayıcı",
     "settings": "Ayarlar",
-    "goToVitrin": "Vitrine Git"
+    "goToProducts": "Vitrine Git"
   },
   "login": {
     "username": "Kullanıcı Adı",
@@ -70,7 +70,7 @@
     "loading": "Giriş yapılıyor...",
     "error": "Kullanıcı adı veya şifre hatalı"
   },
-  "vitrin": {
+  "products": {
     "defaultTitle": "ildivincodino",
     "searchPlaceholder": "Takım veya sezon ara...",
     "jerseyCount": "{{count}} forma",
@@ -921,9 +921,9 @@
     "theme": "Tema",
     "themeLight": "Açık",
     "themeDark": "Koyu",
-    "vitrin": "Vitrin Ayarları",
-    "vitrinTitle": "Vitrin Başlığı",
-    "vitrinTitlePlaceholder": "Forma Koleksiyonum",
+    "products": "Vitrin Ayarları",
+    "storeTitle": "Vitrin Başlığı",
+    "storeTitlePlaceholder": "Forma Koleksiyonum",
     "contactLinks": "İletişim Linkleri",
     "addLink": "Link Ekle",
     "noLinks": "Henüz link eklenmemiş",

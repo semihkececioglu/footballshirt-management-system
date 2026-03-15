@@ -258,7 +258,7 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
 
               <SingleSelect
                 label={t('jersey.featured')}
-                options={[{ value: 'true', label: t('vitrin.featuredOnly') }]}
+                options={[{ value: 'true', label: t('products.featuredOnly') }]}
                 value={f.featured}
                 onChange={(v) => update('featured', v)}
               />
@@ -269,16 +269,16 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
                 availableHexes={options.primaryColors}
                 selected={f.primaryColor}
                 onChange={(v) => update('primaryColor', v)}
-                label={t('vitrin.primaryColor')}
+                label={t('products.primaryColor')}
               />
             )}
 
             <div className="space-y-1">
-              <Label className="text-xs">{t('vitrin.priceRange', { symbol })}</Label>
+              <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
               <div className="flex gap-2 items-center">
                 <Input
                   type="number"
-                  placeholder={t('vitrin.priceMin')}
+                  placeholder={t('products.priceMin')}
                   value={f.minPrice}
                   onChange={(e) => update('minPrice', e.target.value)}
                   className="h-8 text-xs"
@@ -286,7 +286,7 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
                 <span className="text-[var(--text-muted)] text-xs">–</span>
                 <Input
                   type="number"
-                  placeholder={t('vitrin.priceMax')}
+                  placeholder={t('products.priceMax')}
                   value={f.maxPrice}
                   onChange={(e) => update('maxPrice', e.target.value)}
                   className="h-8 text-xs"
