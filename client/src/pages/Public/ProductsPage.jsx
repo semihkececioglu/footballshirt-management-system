@@ -319,87 +319,85 @@ export default function ProductsPage() {
     : jerseys;
   const allLabel = t('common.all');
 
-  function FilterPopover() {
-    return (
-      <Popover open={filterOpen} onOpenChange={(o) => { if (o) handleOpenFilter(); else setFilterOpen(false); }}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" className="relative flex-shrink-0">
-            <SlidersHorizontal size={16} />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px]">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72" align="end">
-          <div className="space-y-3">
-            <p className="text-sm font-semibold">{t('products.filters')}</p>
-            <FSel label={t('products.team')} value={pendingFilters.team} opts={teams} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, team: v }))} />
-            <div className="grid grid-cols-2 gap-2">
-              <FSel label={t('products.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
-              <FSel label={t('products.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
-              <FSel label={t('products.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
-              <FSel label={t('products.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
-              <FSel label={t('products.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
-              <FSel label={t('products.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
-              <FSel label={t('products.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
-            </div>
-            {filterOptions.primaryColors.length > 0 && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">{t('products.primaryColor')}</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {filterOptions.primaryColors.map((hex) => {
-                    const rawName = JERSEY_COLORS.find((c) => c.hex === hex)?.name ?? hex;
-                    const name = translateColor(rawName);
-                    const isSelected = pendingFilters.primaryColor === hex;
-                    const r = parseInt(hex.slice(1, 3), 16);
-                    const g = parseInt(hex.slice(3, 5), 16);
-                    const b = parseInt(hex.slice(5, 7), 16);
-                    const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 128;
-                    return (
-                      <button
-                        key={hex}
-                        type="button"
-                        title={name}
-                        onClick={() => setPendingFilters((p) => ({ ...p, primaryColor: p.primaryColor === hex ? '' : hex }))}
-                        className="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none"
-                        style={{
-                          backgroundColor: hex,
-                          border: isSelected ? '2px solid var(--accent)' : isLight ? '1.5px solid #d1d5db' : '1.5px solid transparent',
-                          boxShadow: isSelected ? '0 0 0 1.5px var(--accent)' : undefined,
-                        }}
-                      >
-                        {isSelected && <Check size={11} strokeWidth={3} style={{ color: isLight ? '#111' : '#fff' }} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="space-y-1">
-              <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
-              <div className="flex gap-2 items-center">
-                <Input type="number" placeholder={t('products.priceMin')} value={pendingFilters.minPrice}
-                  onChange={(e) => setPendingFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
-                  className="h-8 text-xs" />
-                <span className="text-[var(--text-muted)] text-xs">–</span>
-                <Input type="number" placeholder={t('products.priceMax')} value={pendingFilters.maxPrice}
-                  onChange={(e) => setPendingFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
-                  className="h-8 text-xs" />
+  const filterPopover = (
+    <Popover open={filterOpen} onOpenChange={(o) => { if (o) handleOpenFilter(); else setFilterOpen(false); }}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" className="relative flex-shrink-0 cursor-pointer">
+          <SlidersHorizontal size={16} />
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px]">
+              {activeFilterCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72" align="end">
+        <div className="space-y-3">
+          <p className="text-sm font-semibold">{t('products.filters')}</p>
+          <FSel label={t('products.team')} value={pendingFilters.team} opts={teams} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, team: v }))} />
+          <div className="grid grid-cols-2 gap-2">
+            <FSel label={t('products.size')} value={pendingFilters.size} opts={JERSEY_SIZES} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, size: v }))} translateFn={translateJerseySize} />
+            <FSel label={t('products.type')} value={pendingFilters.type} opts={filterOptions.types} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, type: v }))} translateFn={translateJerseyType} />
+            <FSel label={t('products.quality')} value={pendingFilters.quality} opts={filterOptions.qualities} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, quality: v }))} translateFn={translateJerseyQuality} />
+            <FSel label={t('products.condition')} value={pendingFilters.condition} opts={filterOptions.conditions} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, condition: v }))} translateFn={translateCondition} />
+            <FSel label={t('products.brand')} value={pendingFilters.brand} opts={filterOptions.brands} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, brand: v }))} />
+            <FSel label={t('products.league')} value={pendingFilters.league} opts={filterOptions.leagues} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, league: v }))} />
+            <FSel label={t('products.season')} value={pendingFilters.season} opts={filterOptions.seasons} allLabel={allLabel} onChange={(v) => setPendingFilters((p) => ({ ...p, season: v }))} />
+          </div>
+          {filterOptions.primaryColors.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('products.primaryColor')}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {filterOptions.primaryColors.map((hex) => {
+                  const rawName = JERSEY_COLORS.find((c) => c.hex === hex)?.name ?? hex;
+                  const name = translateColor(rawName);
+                  const isSelected = pendingFilters.primaryColor === hex;
+                  const r = parseInt(hex.slice(1, 3), 16);
+                  const g = parseInt(hex.slice(3, 5), 16);
+                  const b = parseInt(hex.slice(5, 7), 16);
+                  const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 128;
+                  return (
+                    <button
+                      key={hex}
+                      type="button"
+                      title={name}
+                      onClick={() => setPendingFilters((p) => ({ ...p, primaryColor: p.primaryColor === hex ? '' : hex }))}
+                      className="w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-110 focus:outline-none cursor-pointer"
+                      style={{
+                        backgroundColor: hex,
+                        border: isSelected ? '2px solid var(--accent)' : isLight ? '1.5px solid #d1d5db' : '1.5px solid transparent',
+                        boxShadow: isSelected ? '0 0 0 1.5px var(--accent)' : undefined,
+                      }}
+                    >
+                      {isSelected && <Check size={11} strokeWidth={3} style={{ color: isLight ? '#111' : '#fff' }} />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="flex gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1">
-                <X size={13} /> {t('common.clear')}
-              </Button>
-              <Button size="sm" onClick={applyFilters} className="flex-1">{t('common.apply')}</Button>
+          )}
+          <div className="space-y-1">
+            <Label className="text-xs">{t('products.priceRange', { symbol })}</Label>
+            <div className="flex gap-2 items-center">
+              <Input type="number" placeholder={t('products.priceMin')} value={pendingFilters.minPrice}
+                onChange={(e) => setPendingFilters((prev) => ({ ...prev, minPrice: e.target.value }))}
+                className="h-8 text-xs" />
+              <span className="text-[var(--text-muted)] text-xs">–</span>
+              <Input type="number" placeholder={t('products.priceMax')} value={pendingFilters.maxPrice}
+                onChange={(e) => setPendingFilters((prev) => ({ ...prev, maxPrice: e.target.value }))}
+                className="h-8 text-xs" />
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1 cursor-pointer">
+              <X size={13} /> {t('common.clear')}
+            </Button>
+            <Button size="sm" onClick={applyFilters} className="flex-1 cursor-pointer">{t('common.apply')}</Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
@@ -450,8 +448,8 @@ export default function ProductsPage() {
                 {contactLinks.map(({ platform, label, link }) => {
                   const Icon = getPlatformIcon(platform);
                   return (
-                    <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer">
-                      <Button variant="outline" size="sm" className="gap-1.5">
+                    <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="cursor-pointer">
+                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
                         <Icon size={14} /> {label || platform} <ExternalLink size={11} className="opacity-60" />
                       </Button>
                     </a>
@@ -462,7 +460,7 @@ export default function ProductsPage() {
 
             {/* Desktop: filter */}
             <div className="hidden sm:block">
-              <FilterPopover />
+              {filterPopover}
             </div>
 
             {/* Desktop: language */}
@@ -495,7 +493,7 @@ export default function ProductsPage() {
 
             {/* Mobile: filter */}
             <div className="sm:hidden">
-              <FilterPopover />
+              {filterPopover}
             </div>
 
             {/* Mobile: hamburger */}
@@ -545,7 +543,7 @@ export default function ProductsPage() {
                     {contactLinks.map(({ platform, label, link }) => {
                       const Icon = getPlatformIcon(platform);
                       return (
-                        <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-sm text-[var(--text-primary)]">
+                        <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors text-sm text-[var(--text-primary)] cursor-pointer">
                           <Icon size={15} /> {label || platform} <ExternalLink size={11} className="opacity-50 ml-auto" />
                         </a>
                       );
