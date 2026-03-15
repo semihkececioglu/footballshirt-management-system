@@ -24,20 +24,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(compression());
-const allowedOrigins = (process.env.CLIENT_URL || '')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS blocked: ${origin}`));
-    },
-    credentials: true,
-  })
-);
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
