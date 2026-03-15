@@ -26,18 +26,18 @@ export default api;
 
 // Jersey servisleri
 export const jerseyService = {
-  getAll: (params) => api.get('/products', { params }),
-  getOne: (id) => api.get(`/products/${id}`),
-  create: (formData) => api.post('/products', formData),
-  update: (id, formData) => api.put(`/products/${id}`, formData),
-  delete: (id) => api.delete(`/products/${id}`),
-  duplicate: (id) => api.post(`/products/${id}/duplicate`),
-  markSold: (id, data) => api.post(`/products/${id}/mark-sold`, data),
-  deleteImage: (publicId) => api.post('/products/images/delete', { publicId }),
-  bulkDelete: (ids) => api.delete('/products/bulk', { data: { ids } }),
-  bulkUpdatePrice: (ids, sellPrice) => api.patch('/products/bulk/price', { ids, sellPrice }),
-  getFilterOptions: (params) => api.get('/products/filter-options', { params }),
-  toggleFeatured: (id) => api.patch(`/products/${id}/featured`),
+  getAll: (params) => api.get('/jerseys', { params }),
+  getOne: (id) => api.get(`/jerseys/${id}`),
+  create: (formData) => api.post('/jerseys', formData),
+  update: (id, formData) => api.put(`/jerseys/${id}`, formData),
+  delete: (id) => api.delete(`/jerseys/${id}`),
+  duplicate: (id) => api.post(`/jerseys/${id}/duplicate`),
+  markSold: (id, data) => api.post(`/jerseys/${id}/mark-sold`, data),
+  deleteImage: (publicId) => api.post('/jerseys/images/delete', { publicId }),
+  bulkDelete: (ids) => api.delete('/jerseys/bulk', { data: { ids } }),
+  bulkUpdatePrice: (ids, sellPrice) => api.patch('/jerseys/bulk/price', { ids, sellPrice }),
+  getFilterOptions: (params) => api.get('/jerseys/filter-options', { params }),
+  toggleFeatured: (id) => api.patch(`/jerseys/${id}/featured`),
 };
 
 // Sale servisleri
