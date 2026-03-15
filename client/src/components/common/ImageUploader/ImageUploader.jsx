@@ -99,7 +99,7 @@ export function ImageUploader({ images = [], onChange, maxFiles = 10 }) {
 
       if (fileArray.length === 0) return;
 
-      // Tüm dosyaları paralel olarak sıkıştır
+      // Compress all files in parallel
       const compressed = await Promise.all(fileArray.map((f) => compressImage(f)));
 
       const toAdd = compressed.map((file, idx) => ({

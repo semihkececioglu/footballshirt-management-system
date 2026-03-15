@@ -1,38 +1,38 @@
 export const JERSEY_COLORS = [
-  // Temel
+  // Base
   { name: 'Beyaz', hex: '#FFFFFF' },
   { name: 'Siyah', hex: '#111111' },
   { name: 'Gri', hex: '#808080' },
   { name: 'Gümüş', hex: '#C0C0C0' },
-  // Maviler
+  // Blues
   { name: 'Lacivert', hex: '#003087' },
   { name: 'Mavi', hex: '#0070B8' },
   { name: 'Açık Mavi', hex: '#6BAED6' },
   { name: 'Gökyüzü Mavisi', hex: '#87CEEB' },
   { name: 'Turkuaz', hex: '#00CED1' },
   { name: 'Petrol', hex: '#006E7F' },
-  // Kırmızılar
+  // Reds
   { name: 'Kırmızı', hex: '#E41E20' },
   { name: 'Koyu Kırmızı', hex: '#8B0000' },
   { name: 'Bordo', hex: '#800020' },
   { name: 'Pembe', hex: '#FF69B4' },
   { name: 'Mercan', hex: '#FF6B6B' },
-  // Sarılar & Turuncular
+  // Yellows & Oranges
   { name: 'Sarı', hex: '#FFD700' },
   { name: 'Altın', hex: '#CFB53B' },
   { name: 'Turuncu', hex: '#FF6B00' },
   { name: 'Amber', hex: '#FFBF00' },
-  // Yeşiller
+  // Greens
   { name: 'Yeşil', hex: '#00A651' },
   { name: 'Koyu Yeşil', hex: '#006400' },
   { name: 'Neon Yeşil', hex: '#39FF14' },
   { name: 'Zeytin', hex: '#6B8E23' },
-  // Morlar & Kahveler
+  // Purples & Browns
   { name: 'Mor', hex: '#6A0DAD' },
   { name: 'Leylak', hex: '#9370DB' },
   { name: 'Kahverengi', hex: '#7B3F00' },
   { name: 'Bej', hex: '#F5DEB3' },
-  // Neon
+  // Neons
   { name: 'Neon Sarı', hex: '#CCFF00' },
   { name: 'Neon Turuncu', hex: '#FF6600' },
   { name: 'Neon Pembe', hex: '#FF1493' },

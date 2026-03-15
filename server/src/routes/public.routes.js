@@ -4,7 +4,7 @@ import Settings from '../models/Settings.model.js';
 
 const router = Router();
 
-// Herkese açık — sadece satılık formalar, hassas bilgiler gizli
+// Public — for-sale jerseys only, sensitive fields excluded
 router.get('/jerseys', async (req, res, next) => {
   try {
     const { team, league, country, season, type, quality, brand, size, condition, featured,
@@ -109,7 +109,7 @@ router.get('/filter-options', async (req, res, next) => {
   }
 });
 
-// Stokta olan formaların distinct takım listesi
+// Distinct team list for in-stock jerseys
 router.get('/teams', async (req, res, next) => {
   try {
     const teams = await Jersey.distinct('teamName', {
@@ -125,7 +125,7 @@ router.get('/teams', async (req, res, next) => {
   }
 });
 
-// Public ayarlar (auth gereksiz)
+// Public settings (no auth required)
 router.get('/settings', async (req, res, next) => {
   try {
     const settings = await Settings.findOne({ _id: 'singleton' });

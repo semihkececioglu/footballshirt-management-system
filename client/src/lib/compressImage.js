@@ -1,10 +1,10 @@
 /**
- * Canvas tabanlı client-side görüntü sıkıştırma.
- * Ekstra paket gerektirmez.
+ * Canvas-based client-side image compression.
+ * No external packages required.
  *
- * @param {File} file - Orijinal görüntü dosyası
+ * @param {File} file - Original image file
  * @param {{ maxDimension?: number, quality?: number }} options
- * @returns {Promise<File>} Sıkıştırılmış dosya (veya orijinal, hangisi küçükse)
+ * @returns {Promise<File>} Compressed file (or original, whichever is smaller)
  */
 export async function compressImage(file, { maxDimension = 1200, quality = 0.82 } = {}) {
   return new Promise((resolve) => {
@@ -16,13 +16,13 @@ export async function compressImage(file, { maxDimension = 1200, quality = 0.82 
 
       let { width, height } = img;
 
-      // Zaten küçükse sıkıştırmaya gerek yok
+      // Skip compression if already small enough
       if (width <= maxDimension && height <= maxDimension && file.size < 300 * 1024) {
         resolve(file);
         return;
       }
 
-      // Boyutları maxDimension'a sığdır
+      // Scale down to fit within maxDimension
       if (width > maxDimension || height > maxDimension) {
         const ratio = Math.min(maxDimension / width, maxDimension / height);
         width = Math.round(width * ratio);
@@ -36,7 +36,7 @@ export async function compressImage(file, { maxDimension = 1200, quality = 0.82 
 
       canvas.toBlob(
         (blob) => {
-          // Sıkıştırma büyütüyorsa orijinali kullan
+          // Use original if compression makes it larger
           if (!blob || blob.size >= file.size) {
             resolve(file);
             return;
@@ -55,7 +55,7 @@ export async function compressImage(file, { maxDimension = 1200, quality = 0.82 
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      resolve(file); // Hata durumunda orijinali kullan
+      resolve(file); // Fall back to original on error
     };
 
     img.src = objectUrl;

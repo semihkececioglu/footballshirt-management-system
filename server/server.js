@@ -50,10 +50,10 @@ app.use(errorHandler);
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('✅ MongoDB bağlandı');
-    app.listen(PORT, () => console.log(`🚀 Server çalışıyor: http://localhost:${PORT}`));
+    console.log('MongoDB connected');
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
-    console.error('❌ MongoDB bağlantı hatası:', err.message);
+    console.error('MongoDB connection error:', err.message);
     process.exit(1);
   });

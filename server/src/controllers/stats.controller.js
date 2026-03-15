@@ -19,7 +19,7 @@ export async function getOverview(req, res, next) {
         $group: {
           _id: null,
           totalRevenue: { $sum: '$salePrice' },
-          totalBuyCost: { $sum: '$buyPrice' }, // satılan formaların alış bedeli toplamı
+          totalBuyCost: { $sum: '$buyPrice' }, // total buy cost of sold jerseys
           count: { $sum: 1 },
         },
       },

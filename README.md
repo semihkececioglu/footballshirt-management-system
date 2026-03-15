@@ -1,8 +1,10 @@
 # Football Shirt Management System
 
-A full-stack web application for managing a football shirt collection — tracking inventory, sales, purchases, wishlists, sellers, and analytics. Includes a public storefront for potential buyers.
+A full-stack web application for managing a football shirt collection. Track your inventory, record sales and purchases, maintain a wishlist, manage seller contacts, and analyse your business performance — all from a single admin panel. A public-facing storefront lets potential buyers browse available listings without an account.
 
-Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and designed for collectors who buy and sell football shirts.
+Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and designed mobile-first for collectors who buy and sell football shirts.
+
+**Live demo:** [ildivincodino.vercel.app/products](https://ildivincodino.vercel.app/products)
 
 ---
 
@@ -66,9 +68,9 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 - View full sales history with profit calculation per item
 
 ### Purchase Tracking
-- Log every purchase (even personal/collection pieces)
-- Link to a seller record
-- Optionally push to the For Sale inventory
+- Log every purchase (including personal/collection pieces)
+- Link purchases to a seller record
+- Optionally push a purchased item directly to the For Sale inventory
 
 ### Wishlist
 - Track shirts you want to buy with target price and listing URL
@@ -78,10 +80,10 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 ### Sellers
 - Contact book for sellers across platforms (Dolap, Instagram, eBay, etc.)
 - WhatsApp deep-link integration (E.164 phone format)
-- See purchase count per seller
+- Purchase count per seller
 
 ### Reminders
-- Track buyer requests for shirts you don't have yet
+- Track buyer requests for shirts you don't currently have
 - Status workflow: Open → Notified → Closed
 - Direct contact via WhatsApp
 
@@ -93,26 +95,26 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 - Organised by year and month
 - Per-period summary: items sold, items purchased, buy/sell spread, profit margin, revenue, net profit, platform breakdown
 
-### Planner / Content Calendar
+### Planner
 - Calendar view for planning social media posts and listing activity
 - Item types: Share, List, Photo, Task
 - Per-day dot indicators colour-coded by type
-- Toggle items as done
+- Toggle items between pending and done
 
-### Public Storefront (`/vitrin` — no login required)
+### Public Storefront (`/products` — no login required)
 - Clean card grid accessible to anyone
 - Filters: team, type, quality, size, condition, brand, league, season, colour, price range
-- Search and sorting (price, date, team)
+- Full-text search and sorting (price, date, team)
 - Detailed jersey dialog with drag-scroll image gallery
-- Configurable contact links (WhatsApp, Dolap, eBay, etc.) managed from Settings
+- Contact links (WhatsApp, Dolap, eBay, etc.) configurable from Settings
 
 ### Settings
-- Set storefront title and contact links
-- Language (Turkish / English), currency (TRY / EUR / USD / GBP), and theme preferences per user
+- Storefront title and contact links
+- Language (Turkish / English), currency (TRY / EUR / USD / GBP), and theme — all persisted per user
 
-### i18n
+### Internationalisation
 - Full Turkish and English support across all pages and forms
-- Language can be toggled from the Settings page or the storefront
+- Language toggle available in Settings and on the storefront
 
 ---
 
@@ -126,11 +128,11 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 | Charts | Recharts |
 | Drag & Drop | @dnd-kit |
 | Animations | Framer Motion |
-| Toast / Alerts | Sonner, Radix AlertDialog |
+| Notifications | Sonner, Radix AlertDialog |
 | i18n | i18next, react-i18next |
 | Backend | Node.js, Express 5 (ESM) |
 | Database | MongoDB, Mongoose 9 |
-| Auth | JWT (single admin user) |
+| Auth | JWT — single admin user |
 | Media | Cloudinary (WebP, quality:auto:good, max 1200px) |
 | Frontend Deploy | Vercel |
 | Backend Deploy | Railway |
@@ -141,8 +143,6 @@ Built with the MERN stack, styled with a handcrafted Vintage Paper theme, and de
 
 ```
 footballshirt-management-system/
-├── scripts/
-│   └── migrate-country-keys.js   # One-time DB migration
 ├── client/                       # React + Vite
 │   ├── public/data/
 │   │   ├── teams.json            # 168 teams (static)
@@ -154,10 +154,10 @@ footballshirt-management-system/
 │       │   ├── ui/               # Radix UI base components
 │       │   ├── common/           # Shared custom components
 │       │   └── layout/           # Sidebar, Header, MobileNav
-│       ├── pages/                # One folder per page
+│       ├── pages/                # One folder per route
 │       ├── store/                # Zustand stores
 │       ├── hooks/                # Custom hooks
-│       ├── services/api.js       # Axios instance + all services
+│       ├── services/api.js       # Axios instance + all API services
 │       └── lib/                  # utils, constants
 └── server/                       # Express (ESM)
     └── src/
@@ -181,7 +181,7 @@ footballshirt-management-system/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/footballshirt-management-system.git
+git clone https://github.com/semihkececioglu/footballshirt-management-system.git
 cd footballshirt-management-system
 ```
 
@@ -207,10 +207,10 @@ CLOUDINARY_API_SECRET=your_api_secret
 CLIENT_URL=http://localhost:5173
 ```
 
-To generate a password hash:
+Generate a password hash:
 
 ```bash
-node server/src/utils/hash.js yourpassword
+node src/utils/hash.js yourpassword
 ```
 
 ### 3. Client setup
@@ -236,8 +236,9 @@ cd server && npm run dev
 cd client && npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
-The public storefront is at `http://localhost:5173/vitrin`.
+App: `http://localhost:5173`
+Admin panel: `http://localhost:5173/login`
+Public storefront: `http://localhost:5173/products`
 
 ---
 
@@ -245,10 +246,10 @@ The public storefront is at `http://localhost:5173/vitrin`.
 
 ### Backend — Railway
 
-Set the following environment variables in your Railway service:
+1. New Project → Deploy from GitHub → set **Root Directory** to `server`
+2. Add environment variables:
 
 ```
-PORT=5000
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=...
 JWT_EXPIRES_IN=7d
@@ -260,52 +261,51 @@ CLOUDINARY_API_SECRET=...
 CLIENT_URL=https://your-app.vercel.app
 ```
 
-Start command: `node server.js` (from `server/` directory, or set root directory to `server` in Railway settings).
-
 ### Frontend — Vercel
 
-Set the following environment variables in your Vercel project:
+1. New Project → Import from GitHub
+2. Set **Root Directory** to `client`, **Framework** to Vite
+3. Set **Build Command** to `npm install && npm run build`
+4. Add environment variable:
 
 ```
 VITE_API_URL=https://your-app.railway.app/api
 ```
 
-Deploy from the `client/` directory (set as the root in Vercel settings, or use the `cd client && npm run build` build command).
+---
+
+## API Reference
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/api/auth/login` | Admin login | — |
+| GET | `/api/jerseys` | List jerseys (filterable) | Yes |
+| POST | `/api/jerseys` | Create jersey | Yes |
+| PUT | `/api/jerseys/:id` | Update jersey | Yes |
+| DELETE | `/api/jerseys/:id` | Delete jersey | Yes |
+| PATCH | `/api/jerseys/:id/featured` | Toggle featured | Yes |
+| POST | `/api/jerseys/:id/mark-sold` | Mark as sold | Yes |
+| GET | `/api/jerseys/filter-options` | Available filter values | Yes |
+| GET | `/api/sales` | List sales | Yes |
+| POST | `/api/sales` | Create sale record | Yes |
+| GET | `/api/purchases` | List purchases | Yes |
+| POST | `/api/purchases` | Create purchase | Yes |
+| GET | `/api/sellers` | List sellers | Yes |
+| GET | `/api/wishlist` | List wishlist items | Yes |
+| GET | `/api/reminders` | List reminders | Yes |
+| GET | `/api/planner` | List plan items (by month) | Yes |
+| GET | `/api/stats/counts` | Dashboard counts | Yes |
+| GET | `/api/reports/:year/:month` | Monthly report | Yes |
+| GET | `/api/settings` | Get settings | Yes |
+| PUT | `/api/settings` | Update settings | Yes |
+| GET | `/api/public/jerseys` | Public storefront listings | — |
+| GET | `/api/public/jerseys/:id` | Public jersey detail | — |
+| GET | `/api/public/filter-options` | Public filter values | — |
+| GET | `/api/public/settings` | Storefront title and contact links | — |
 
 ---
 
-## API Overview
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/login` | Admin login |
-| GET | `/api/jerseys` | List jerseys (with filters) |
-| POST | `/api/jerseys` | Create jersey |
-| PUT | `/api/jerseys/:id` | Update jersey |
-| DELETE | `/api/jerseys/:id` | Delete jersey |
-| PATCH | `/api/jerseys/:id/featured` | Toggle featured |
-| POST | `/api/jerseys/:id/mark-sold` | Mark as sold |
-| GET | `/api/jerseys/filter-options` | Available filter values |
-| GET | `/api/sales` | List sales |
-| POST | `/api/sales` | Create sale record |
-| GET | `/api/purchases` | List purchases |
-| POST | `/api/purchases` | Create purchase |
-| GET | `/api/sellers` | List sellers |
-| GET | `/api/wishlist` | List wishlist items |
-| GET | `/api/reminders` | List reminders |
-| GET | `/api/planner` | List plan items (by month) |
-| GET | `/api/stats/counts` | Dashboard counts |
-| GET | `/api/reports/:year/:month` | Monthly report |
-| GET | `/api/settings` | Get settings |
-| PUT | `/api/settings` | Update settings |
-| GET | `/api/public/jerseys` | Public storefront listings |
-| GET | `/api/public/jerseys/:id` | Public jersey detail |
-| GET | `/api/public/filter-options` | Public filter values |
-| GET | `/api/public/settings` | Public storefront settings |
-
----
-
-## Data Model Highlights
+## Data Models
 
 ### Jersey
 
@@ -321,8 +321,8 @@ Deploy from the `client/` directory (set as the root in Vercel settings, or use 
   patches: [String],
   buyPrice, sellPrice,
   platforms: [{ name, listingUrl, isActive }],
-  status,         // 'for_sale' | 'sold' | 'not_for_sale'
-  featured,       // Boolean — pins to top of storefront
+  status,       // 'for_sale' | 'sold' | 'not_for_sale'
+  featured,     // pins to top of storefront
   notes, tags,
   purchaseDate, createdAt, updatedAt
 }
@@ -336,23 +336,23 @@ Deploy from the `client/` directory (set as the root in Vercel settings, or use 
   buyerName, buyerUsername, buyerPhone,
   platform, listingUrl,
   salePrice, paymentMethod,
-  soldSize,       // which size variant was sold
+  soldSize,     // which size variant was sold
   soldAt, notes
 }
 ```
 
 ---
 
-## Theme — Vintage Paper
+## Theme
 
-The UI uses a custom CSS variable system inspired by aged paper. Both light and dark modes are supported.
+The UI is built around a custom CSS variable system inspired by aged paper, with full dark mode support.
 
 ```css
 /* Light */
 --bg-primary:   #F5F0E8;
 --bg-card:      #FAF7F2;
 --text-primary: #2C2416;
---accent:       #8B4513;  /* Saddle Brown */
+--accent:       #8B4513;
 --border:       #D4C9B8;
 
 /* Dark */
@@ -362,7 +362,7 @@ The UI uses a custom CSS variable system inspired by aged paper. Both light and 
 --accent:       #C4854A;
 ```
 
-Fonts: **Prata** (headings, serif) + **Geist** (body, sans-serif) + **Geist Mono** (code/numbers).
+**Prata** (headings) + **Geist** (body) + **Geist Mono** (numbers)
 
 ---
 
