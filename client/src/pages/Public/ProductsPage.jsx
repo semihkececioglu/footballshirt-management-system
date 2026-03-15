@@ -191,6 +191,7 @@ export default function ProductsPage() {
   const [teams, setTeams] = useState([]);
   const [contactLinks, setContactLinks] = useState([]);
   const [storeTitle, setVitrinTitle] = useState('');
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const LIMIT = 24;
 
   function setParam(key, value, replace = true) {
@@ -226,7 +227,8 @@ export default function ProductsPage() {
         setContactLinks(s.contactLinks || []);
         if (s.storeTitle) setVitrinTitle(s.storeTitle);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setSettingsLoaded(true));
   }, []);
 
   const loadKey = [search, sort, page, ...FILTER_KEYS.map((k) => searchParams.get(k) || '')].join('|');
@@ -413,12 +415,13 @@ export default function ProductsPage() {
           {/* Logo + Title */}
           <div className="flex items-center gap-2.5 whitespace-nowrap flex-shrink-0">
             <img src="/logo.png" alt="logo" className="h-8 w-8 object-contain rounded-full" />
-            <h1 className="font-display text-lg font-bold text-[var(--text-primary)] hidden sm:block">
-              {storeTitle || t('products.defaultTitle')}
-            </h1>
-            <h1 className="font-display text-base font-bold text-[var(--text-primary)] sm:hidden">
-              {storeTitle || t('products.defaultTitle')}
-            </h1>
+            {settingsLoaded ? (
+              <h1 className="font-display text-lg font-bold text-[var(--text-primary)]">
+                {storeTitle || t('products.defaultTitle')}
+              </h1>
+            ) : (
+              <Skeleton className="h-5 w-32 rounded" />
+            )}
           </div>
 
           {/* Desktop search */}
@@ -443,20 +446,23 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-1.5 ml-auto">
             {/* Desktop: contact links */}
-            {contactLinks.length > 0 && (
-              <div className="hidden sm:flex items-center gap-2 mr-1">
-                {contactLinks.map(({ platform, label, link }) => {
-                  const Icon = getPlatformIcon(platform);
-                  return (
-                    <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="cursor-pointer">
-                      <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
-                        <Icon size={14} /> {label || platform} <ExternalLink size={11} className="opacity-60" />
-                      </Button>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            <div className="hidden sm:flex items-center gap-2 mr-1">
+              {!settingsLoaded ? (
+                <>
+                  <Skeleton className="h-8 w-24 rounded-md" />
+                  <Skeleton className="h-8 w-24 rounded-md" />
+                </>
+              ) : contactLinks.map(({ platform, label, link }) => {
+                const Icon = getPlatformIcon(platform);
+                return (
+                  <a key={`${platform}-${label}`} href={link} target="_blank" rel="noreferrer" className="cursor-pointer">
+                    <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
+                      <Icon size={14} /> {label || platform} <ExternalLink size={11} className="opacity-60" />
+                    </Button>
+                  </a>
+                );
+              })}
+            </div>
 
             {/* Filter — always single instance */}
             {filterPopover}
