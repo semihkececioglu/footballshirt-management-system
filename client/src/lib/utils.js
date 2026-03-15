@@ -9,7 +9,14 @@ const CURRENCY_LOCALE = { TRY: 'tr-TR', EUR: 'de-DE', USD: 'en-US', GBP: 'en-GB'
 
 export function formatCurrency(amount, currency = 'TRY') {
   const locale = CURRENCY_LOCALE[currency] ?? 'tr-TR';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount ?? 0);
+  const value = amount ?? 0;
+  const hasDecimals = value % 1 !== 0;
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+  }).format(value);
 }
 
 export function formatDate(date) {
