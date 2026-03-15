@@ -72,7 +72,7 @@
   },
   "products": {
     "defaultTitle": "ildivincodino",
-    "searchPlaceholder": "Takım veya sezon ara...",
+    "searchPlaceholder": "Takım ara...",
     "jerseyCount": "{{count}} forma",
     "featured": "Öne Çıkanlar",
     "allJerseys": "Tüm Formalar",
