@@ -20,7 +20,7 @@ import VitrinPage from '@/pages/Public/VitrinPage';
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  if (!isAuthenticated) return <Navigate to="/jerseys" replace />;
+  if (!isAuthenticated) return <Navigate to="/products" replace />;
   return children;
 }
 
@@ -47,7 +47,7 @@ export default function App() {
       <Toaster position="top-right" richColors closeButton />
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
-        <Route path="/jerseys" element={<VitrinPage />} />
+        <Route path="/products" element={<VitrinPage />} />
         <Route
           path="/"
           element={
@@ -68,7 +68,7 @@ export default function App() {
           <Route path="planner" element={<PlannerPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/jerseys" replace />} />
+        <Route path="*" element={<Navigate to="/products" replace />} />
       </Routes>
     </>
   );
