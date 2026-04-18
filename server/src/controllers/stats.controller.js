@@ -8,25 +8,44 @@ import { createError } from '../middleware/error.middleware.js';
 
 export async function getOverview(req, res, next) {
   try {
-    const [totalForSale, totalSold, totalPurchased] = await Promise.all([
+    const [totalForSale, totalSold, salesAgg, stockValueAgg, purchasesAgg] = await Promise.all([
       Jersey.countDocuments({ status: 'for_sale' }),
       Jersey.countDocuments({ status: 'sold' }),
-      Purchase.countDocuments(),
-    ]);
-
-    const salesAgg = await Sale.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: '$salePrice' },
-          totalBuyCost: { $sum: '$buyPrice' }, // total buy cost of sold jerseys
-          count: { $sum: 1 },
+      Sale.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$salePrice' },
+            totalBuyCost: { $sum: '$buyPrice' },
+            count: { $sum: 1 },
+          },
         },
-      },
-    ]);
-    const stockValueAgg = await Jersey.aggregate([
-      { $match: { status: 'for_sale' } },
-      { $group: { _id: null, value: { $sum: { $multiply: ['$sellPrice', '$stockCount'] } } } },
+      ]),
+      Jersey.aggregate([
+        { $match: { status: 'for_sale' } },
+        { $group: { _id: null, value: { $sum: { $multiply: ['$sellPrice', '$stockCount'] } } } },
+      ]),
+      Purchase.aggregate([
+        {
+          $addFields: {
+            totalQty: {
+              $cond: {
+                if: { $gt: [{ $size: { $ifNull: ['$sizeVariants', []] } }, 0] },
+                then: { $sum: '$sizeVariants.stockCount' },
+                else: 1,
+              },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            itemCount: { $sum: '$totalQty' },
+            spend: { $sum: { $multiply: ['$buyPrice', '$totalQty'] } },
+          },
+        },
+      ]),
     ]);
 
     const totalRevenue = salesAgg[0]?.totalRevenue || 0;
@@ -37,7 +56,9 @@ export async function getOverview(req, res, next) {
       data: {
         totalForSale,
         totalSold,
-        totalPurchased,
+        totalPurchased: purchasesAgg[0]?.count || 0,
+        totalPurchaseItems: purchasesAgg[0]?.itemCount || 0,
+        totalPurchaseSpend: purchasesAgg[0]?.spend || 0,
         totalRevenue,
         totalCost: totalBuyCost,
         netProfit: totalRevenue - totalBuyCost,
@@ -45,6 +66,41 @@ export async function getOverview(req, res, next) {
         totalSales: salesAgg[0]?.count || 0,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMonthlyPurchases(req, res, next) {
+  try {
+    const { year } = req.query;
+    const matchYear = year ? { $expr: { $eq: [{ $year: '$purchaseDate' }, Number(year)] } } : {};
+    const data = await Purchase.aggregate([
+      { $match: matchYear },
+      {
+        $addFields: {
+          totalQty: {
+            $cond: {
+              if: { $gt: [{ $size: { $ifNull: ['$sizeVariants', []] } }, 0] },
+              then: { $sum: '$sizeVariants.stockCount' },
+              else: 1,
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { year: { $year: '$purchaseDate' }, month: { $month: '$purchaseDate' } },
+          count: { $sum: 1 },
+          itemCount: { $sum: '$totalQty' },
+          spend: { $sum: { $multiply: ['$buyPrice', '$totalQty'] } },
+        },
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      { $addFields: { year: '$_id.year', month: '$_id.month' } },
+      { $project: { _id: 0 } },
+    ]);
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }
@@ -159,6 +215,22 @@ export async function getBuyerStats(req, res, next) {
   }
 }
 
+
+export async function getAverageSaleTime(req, res, next) {
+  try {
+    const result = await Sale.aggregate([
+      { $lookup: { from: 'purchases', localField: 'jerseyId', foreignField: 'linkedJerseyId', as: 'purchase' } },
+      { $unwind: { path: '$purchase', preserveNullAndEmptyArrays: false } },
+      { $addFields: { days: { $divide: [{ $subtract: ['$soldAt', '$purchase.purchaseDate'] }, 86400000] } } },
+      { $match: { days: { $gte: 0 } } },
+      { $group: { _id: null, avg: { $avg: '$days' }, min: { $min: '$days' }, max: { $max: '$days' }, count: { $sum: 1 } } },
+    ]);
+    const d = result[0] || { avg: 0, min: 0, max: 0, count: 0 };
+    res.json({ success: true, data: { avgDays: Math.round(d.avg), minDays: Math.round(d.min), maxDays: Math.round(d.max), count: d.count } });
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function getCounts(req, res, next) {
   try {

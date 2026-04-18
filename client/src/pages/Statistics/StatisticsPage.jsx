@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, ShoppingBag, Package, DollarSign, BarChart2 } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Package, DollarSign, BarChart2, ShoppingCart, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer,
@@ -8,6 +8,9 @@ import {
 } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '@/components/common/StatCard/StatCard';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { statsService } from '@/services/api';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 
@@ -23,10 +26,13 @@ function SectionTitle({ children }) {
   );
 }
 
-function ChartCard({ title, children, loading }) {
+function ChartCard({ title, children, loading, action }) {
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-5 space-y-4">
-      <p className="text-sm font-medium text-[var(--text-primary)]">{title}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-[var(--text-primary)]">{title}</p>
+        {action}
+      </div>
       {loading ? <Skeleton className="h-56 w-full rounded-lg" /> : children}
     </div>
   );
@@ -44,10 +50,15 @@ export default function StatisticsPage() {
 
   const [overview, setOverview] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const [avgSaleTime, setAvgSaleTime] = useState(null);
 
   const [year, setYear] = useState(CURRENT_YEAR);
   const [monthly, setMonthly] = useState([]);
   const [monthlyLoading, setMonthlyLoading] = useState(true);
+
+  const [purchaseYear, setPurchaseYear] = useState(CURRENT_YEAR);
+  const [monthlyPurchases, setMonthlyPurchases] = useState([]);
+  const [monthlyPurchasesLoading, setMonthlyPurchasesLoading] = useState(true);
 
   const [platforms, setPlatforms] = useState([]);
   const [platformsLoading, setPlatformsLoading] = useState(true);
@@ -68,6 +79,14 @@ export default function StatisticsPage() {
         toast.error(t('statistics.loadError'));
       } finally {
         setOverviewLoading(false);
+      }
+    }
+    async function loadAvgSaleTime() {
+      try {
+        const res = await statsService.averageSaleTime();
+        setAvgSaleTime(res.data.data);
+      } catch {
+        // sessiz hata — isteğe bağlı stat
       }
     }
     async function loadPlatforms() {
@@ -105,6 +124,7 @@ export default function StatisticsPage() {
     }
 
     loadOverview();
+    loadAvgSaleTime();
     loadPlatforms();
     loadTeams();
     loadSizes();
@@ -115,7 +135,6 @@ export default function StatisticsPage() {
       setMonthlyLoading(true);
       try {
         const res = await statsService.monthlySales(year);
-        // Normalize: fill all 12 months
         const raw = res.data.data || [];
         const filled = MONTHS.map((name, i) => {
           const found = raw.find((r) => Number(r.month) === i + 1);
@@ -131,11 +150,44 @@ export default function StatisticsPage() {
     loadMonthly();
   }, [year, i18n.language]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    async function loadMonthlyPurchases() {
+      setMonthlyPurchasesLoading(true);
+      try {
+        const res = await statsService.monthlyPurchases(purchaseYear);
+        const raw = res.data.data || [];
+        const filled = MONTHS.map((name, i) => {
+          const found = raw.find((r) => Number(r.month) === i + 1);
+          return { name, count: found?.count || 0, itemCount: found?.itemCount || 0, spend: found?.spend || 0 };
+        });
+        setMonthlyPurchases(filled);
+      } catch {
+        toast.error(t('statistics.loadError'));
+      } finally {
+        setMonthlyPurchasesLoading(false);
+      }
+    }
+    loadMonthlyPurchases();
+  }, [purchaseYear, i18n.language]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const yearOptions = Array.from({ length: 7 }, (_, i) => CURRENT_YEAR - 3 + i);
+
+  const YearSelect = ({ value, onChange }) => (
+    <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger className="w-20 h-7 text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {yearOptions.map((y) => (
+          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Overview */}
+      {/* Sales Overview */}
       <div>
         <SectionTitle>{t('statistics.overview')}</SectionTitle>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -169,28 +221,50 @@ export default function StatisticsPage() {
             icon={Package}
             loading={overviewLoading}
           />
+          {(overviewLoading || (avgSaleTime && avgSaleTime.count > 0)) && (
+            <StatCard
+              label={t('statistics.avgSaleTime')}
+              value={overviewLoading ? '—' : t('statistics.avgSaleTimeDays', { days: avgSaleTime?.avgDays ?? 0 })}
+              icon={Clock}
+              loading={overviewLoading}
+            />
+          )}
         </div>
       </div>
 
-      {/* Monthly + Platform */}
+      {/* Purchase Overview */}
+      <div>
+        <SectionTitle>{t('statistics.purchaseOverview')}</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatCard
+            label={t('statistics.totalPurchaseItems')}
+            value={overviewLoading ? '—' : (overview?.totalPurchaseItems ?? 0)}
+            icon={ShoppingCart}
+            loading={overviewLoading}
+          />
+          <StatCard
+            label={t('statistics.totalPurchaseSpend')}
+            value={overviewLoading ? '—' : formatCurrency(overview?.totalPurchaseSpend ?? 0)}
+            icon={DollarSign}
+            loading={overviewLoading}
+          />
+          <StatCard
+            label={t('statistics.totalPurchased')}
+            value={overviewLoading ? '—' : (overview?.totalPurchased ?? 0)}
+            icon={Package}
+            loading={overviewLoading}
+          />
+        </div>
+      </div>
+
+      {/* Monthly Sales + Platform */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Monthly Bar Chart */}
         <div className="lg:col-span-2">
           <ChartCard
-            title={`${t('statistics.monthlySales')} — ${year}`}
+            title={t('statistics.monthlySales')}
             loading={monthlyLoading}
+            action={<YearSelect value={year} onChange={setYear} />}
           >
-            <div className="flex items-center justify-end mb-2">
-              <select
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                className="text-xs border border-[var(--border)] bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded px-2 py-1"
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={monthly} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <XAxis
@@ -250,9 +324,7 @@ export default function StatisticsPage() {
                   innerRadius={50}
                   outerRadius={85}
                   paddingAngle={2}
-                  label={({ platform, percent }) =>
-                    `${platform} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
                   labelLine={false}
                 >
                   {platforms.map((_, i) => (
@@ -274,7 +346,7 @@ export default function StatisticsPage() {
               {platforms.map((p, i) => (
                 <div key={i} className="flex items-center gap-1.5">
                   <span
-                    className="inline-block w-2.5 h-2.5 rounded-full"
+                    className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
                   />
                   <span className="text-xs text-[var(--text-muted)]">{p.platform}</span>
@@ -283,6 +355,58 @@ export default function StatisticsPage() {
             </div>
           </ChartCard>
         </div>
+      </div>
+
+      {/* Monthly Purchases */}
+      <div>
+        <ChartCard
+          title={t('statistics.monthlyPurchases')}
+          loading={monthlyPurchasesLoading}
+          action={<YearSelect value={purchaseYear} onChange={setPurchaseYear} />}
+        >
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={monthlyPurchases} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                tickFormatter={(v) => v.slice(0, 3)}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                yAxisId="items"
+                orientation="left"
+                tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                axisLine={false}
+                tickLine={false}
+                width={28}
+              />
+              <YAxis
+                yAxisId="spend"
+                orientation="right"
+                tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                axisLine={false}
+                tickLine={false}
+                width={48}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+              />
+              <ChartTooltip
+                contentStyle={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                formatter={(value, name) => [
+                  name === 'spend' ? formatCurrency(value) : value,
+                  name === 'spend' ? t('statistics.purchaseSpend') : t('statistics.purchaseCount'),
+                ]}
+              />
+              <Bar yAxisId="items" dataKey="itemCount" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} maxBarSize={28} />
+              <Bar yAxisId="spend" dataKey="spend" fill={CHART_COLORS[4]} radius={[4, 4, 0, 0]} maxBarSize={28} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
       {/* Teams + Sizes */}
