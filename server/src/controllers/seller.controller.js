@@ -1,10 +1,46 @@
 import Seller from '../models/Seller.model.js';
+import Purchase from '../models/Purchase.model.js';
 import { createError } from '../middleware/error.middleware.js';
 
 export async function getSellers(req, res, next) {
   try {
     const sellers = await Seller.find().sort('name');
     res.json({ success: true, data: sellers });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getSellerStats(req, res, next) {
+  try {
+    const agg = await Purchase.aggregate([
+      { $match: { seller: { $exists: true, $ne: null } } },
+      {
+        $addFields: {
+          totalQty: {
+            $cond: [
+              { $gt: [{ $size: { $ifNull: ['$sizeVariants', []] } }, 0] },
+              { $sum: '$sizeVariants.stockCount' },
+              1,
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$seller',
+          purchaseCount: { $sum: 1 },
+          totalSpent: { $sum: { $multiply: ['$buyPrice', '$totalQty'] } },
+          lastPurchaseDate: { $max: '$purchaseDate' },
+        },
+      },
+    ]);
+
+    const statsMap = Object.fromEntries(
+      agg.map((d) => [d._id.toString(), { purchaseCount: d.purchaseCount, totalSpent: d.totalSpent, lastPurchaseDate: d.lastPurchaseDate }])
+    );
+
+    res.json({ success: true, data: statsMap });
   } catch (err) {
     next(err);
   }

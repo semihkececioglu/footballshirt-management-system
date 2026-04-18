@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
-import { getSellers, createSeller, updateSeller, deleteSeller } from '../controllers/seller.controller.js';
+import { getSellers, getSellerStats, createSeller, updateSeller, deleteSeller } from '../controllers/seller.controller.js';
 
 const router = Router();
 router.use(authenticate);
+router.get('/stats', getSellerStats);
 router.get('/', getSellers);
 router.post('/', createSeller);
 router.put('/:id', updateSeller);

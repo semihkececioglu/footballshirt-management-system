@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
+  ResponsiveModal, ResponsiveModalContent, ResponsiveModalHeader, ResponsiveModalTitle, ResponsiveModalFooter,
+} from '@/components/ui/responsive-modal';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { FormField } from '@/components/forms/JerseyForm/FormField';
 import {
@@ -21,8 +21,10 @@ import {
   Tooltip, TooltipProvider, TooltipTrigger, TooltipContent,
 } from '@/components/ui/tooltip';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { Combobox } from '@/components/ui/combobox';
 import { sellerService } from '@/services/api';
-import { getWhatsAppUrl } from '@/lib/utils';
+import { getWhatsAppUrl, formatDate } from '@/lib/utils';
+import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 
 const EMPTY_FORM = {
   name: '',
@@ -36,7 +38,9 @@ const EMPTY_PLATFORM = { name: '', profileUrl: '', username: '' };
 
 export default function SellersPage() {
   const { t } = useTranslation();
+  const formatCurrency = useFormatCurrency();
   const [sellers, setSellers] = useState([]);
+  const [statsMap, setStatsMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editSeller, setEditSeller] = useState(null);
@@ -49,12 +53,15 @@ export default function SellersPage() {
     try {
       const res = await sellerService.getAll();
       setSellers(res.data.data || res.data);
+      sellerService.getStats()
+        .then((r) => setStatsMap(r.data.data || {}))
+        .catch(() => {});
     } catch {
       toast.error(t('sellers.toast.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { load(); }, [load]);
 
@@ -205,6 +212,30 @@ export default function SellersPage() {
     },
     {
       key: '_id',
+      label: t('sellers.col.purchases'),
+      className: 'hidden md:table-cell text-right',
+      render: (id) => {
+        const s = statsMap[id];
+        if (!s) return '—';
+        return (
+          <div className="text-right">
+            <p className="font-medium text-[var(--text-primary)]">{s.purchaseCount}</p>
+            <p className="text-xs text-[var(--text-muted)]">{formatCurrency(s.totalSpent || 0)}</p>
+          </div>
+        );
+      },
+    },
+    {
+      key: '__lastPurchase',
+      label: t('sellers.col.lastPurchase'),
+      className: 'hidden lg:table-cell',
+      render: (_, row) => {
+        const s = statsMap[row._id];
+        return s?.lastPurchaseDate ? formatDate(s.lastPurchaseDate) : '—';
+      },
+    },
+    {
+      key: '__actions',
       label: '',
       className: 'w-10',
       render: (_, row) => {
@@ -271,25 +302,31 @@ export default function SellersPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editSeller ? t('sellers.editSeller') : t('sellers.addSeller')}</DialogTitle>
-          </DialogHeader>
+      <ResponsiveModal open={formOpen} onOpenChange={setFormOpen}>
+        <ResponsiveModalContent className="max-w-lg">
+          <ResponsiveModalHeader>
+            <ResponsiveModalTitle>{editSeller ? t('sellers.editSeller') : t('sellers.addSeller')}</ResponsiveModalTitle>
+          </ResponsiveModalHeader>
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
             <FormField label={t('sellers.form.name')} required>
-              <Input
+              <Combobox
+                options={sellers.map((s) => ({ value: s.name, label: s.name }))}
                 value={form.name}
-                onChange={(e) => setField('name', e.target.value)}
+                onChange={(v) => setField('name', v || '')}
                 placeholder={t('sellers.form.namePlaceholder')}
+                allowCustom
+                clearable
               />
             </FormField>
 
             <FormField label={t('sellers.col.username')}>
-              <Input
+              <Combobox
+                options={sellers.filter((s) => s.username).map((s) => ({ value: s.username, label: s.username }))}
                 value={form.username}
-                onChange={(e) => setField('username', e.target.value)}
+                onChange={(v) => setField('username', v || '')}
                 placeholder={t('sellers.form.usernamePlaceholder')}
+                allowCustom
+                clearable
               />
             </FormField>
 
@@ -355,17 +392,17 @@ export default function SellersPage() {
               ))}
             </div>
 
-            <DialogFooter>
+            <ResponsiveModalFooter>
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editSeller ? t('common.save') : t('common.add')}
               </Button>
-            </DialogFooter>
+            </ResponsiveModalFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveModalContent>
+      </ResponsiveModal>
     </div>
   );
 }
