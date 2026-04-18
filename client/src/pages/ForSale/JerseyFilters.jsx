@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { Search, SlidersHorizontal, X, ChevronDown, Check } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ChevronDown, Check, Bookmark, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,6 +11,13 @@ import { jerseyService } from '@/services/api';
 import { useTranslateConstant } from '@/hooks/useTranslateConstant';
 import { useCurrencyStore, CURRENCIES } from '@/store/currencyStore';
 import { ColorFilterChips } from '@/components/common/ColorFilter/ColorFilterChips';
+
+const SAVED_FILTERS_KEY = 'forsale_saved_filters';
+const MAX_SAVED = 5;
+
+function loadSavedFilters() {
+  try { return JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) || '[]'); } catch { return []; }
+}
 
 const EMPTY = {
   search: '', type: [], quality: [], size: [], condition: [],
@@ -176,6 +184,7 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
 
   const [f, setF] = useState(() => parseInitialValues(initialValues));
   const [open, setOpen] = useState(false);
+  const [savedFilters, setSavedFilters] = useState(loadSavedFilters);
   const [options, setOptions] = useState({
     types: [], qualities: [], conditions: [], brands: [], leagues: [], seasons: [], sizes: [], primaryColors: [],
   });
@@ -216,6 +225,32 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
     if (k === 'search') return false;
     return Array.isArray(v) ? v.length > 0 : !!v;
   }).length;
+
+  function saveCurrentFilter() {
+    const current = savedFilters;
+    if (current.length >= MAX_SAVED) {
+      toast.error?.(t('forSale.savedFiltersMax', { max: MAX_SAVED }));
+      return;
+    }
+    const name = window.prompt(t('forSale.savedFilterName'));
+    if (!name?.trim()) return;
+    const next = [...current, { name: name.trim(), filters: clean(f) }];
+    setSavedFilters(next);
+    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(next));
+  }
+
+  function applySavedFilter(sf) {
+    const parsed = parseInitialValues(sf.filters);
+    setF(parsed);
+    onFilterChange(sf.filters);
+    setOpen(false);
+  }
+
+  function deleteSavedFilter(idx) {
+    const next = savedFilters.filter((_, i) => i !== idx);
+    setSavedFilters(next);
+    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(next));
+  }
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -301,6 +336,46 @@ export function JerseyFilters({ onFilterChange, initialValues }) {
               <Button size="sm" onClick={apply} className="flex-1">
                 {t('common.apply')}
               </Button>
+            </div>
+
+            {/* Saved filters */}
+            <div className="border-t border-[var(--border)] pt-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-medium text-[var(--text-muted)]">{t('forSale.savedFilters')}</p>
+                {savedFilters.length < MAX_SAVED && (
+                  <button
+                    type="button"
+                    onClick={saveCurrentFilter}
+                    className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+                  >
+                    <Bookmark size={11} /> {t('forSale.saveFilter')}
+                  </button>
+                )}
+              </div>
+              {savedFilters.length === 0 ? (
+                <p className="text-xs text-[var(--text-muted)]">{t('forSale.noSavedFilters')}</p>
+              ) : (
+                <div className="space-y-1">
+                  {savedFilters.map((sf, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-1">
+                      <button
+                        type="button"
+                        onClick={() => applySavedFilter(sf)}
+                        className="flex-1 text-left text-xs px-2 py-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] truncate"
+                      >
+                        {sf.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSavedFilter(idx)}
+                        className="p-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-red-500"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </PopoverContent>

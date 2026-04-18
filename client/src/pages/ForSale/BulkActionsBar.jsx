@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2, DollarSign, X } from 'lucide-react';
+import { Trash2, DollarSign, X, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -8,8 +8,11 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
   AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
-export function BulkActionsBar({ count, onDelete, onPriceUpdate, onClear }) {
+export function BulkActionsBar({ count, onDelete, onPriceUpdate, onStatusUpdate, onClear }) {
   const { t } = useTranslation();
   const [priceInput, setPriceInput] = useState('');
   const [showPrice, setShowPrice] = useState(false);
@@ -47,6 +50,21 @@ export function BulkActionsBar({ count, onDelete, onPriceUpdate, onClear }) {
           <Button variant="outline" size="sm" onClick={() => setShowPrice(true)}>
             <DollarSign size={13} /> {t('forSale.bulkUpdatePrice')}
           </Button>
+        )}
+
+        {/* Bulk status */}
+        {onStatusUpdate && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Tag size={13} /> {t('forSale.bulkStatus')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => onStatusUpdate('for_sale')}>{t('forSale.statusForSale')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onStatusUpdate('not_for_sale')}>{t('forSale.statusNotForSale')}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Bulk delete */}

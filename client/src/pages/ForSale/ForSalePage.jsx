@@ -199,6 +199,15 @@ export default function ForSalePage() {
     } catch { toast.error(t('forSale.bulkPriceError')); }
   }
 
+  async function handleBulkStatus(status) {
+    try {
+      await jerseyService.bulkUpdateStatus(selected, status);
+      toast.success(t('forSale.bulkStatusSuccess'));
+      setSelected([]);
+      loadJerseys();
+    } catch { toast.error(t('forSale.bulkStatusError')); }
+  }
+
   const actions = {
     onEdit: openEdit,
     onSale: openSale,
@@ -239,6 +248,7 @@ export default function ForSalePage() {
           count={selected.length}
           onDelete={handleBulkDelete}
           onPriceUpdate={handleBulkPrice}
+          onStatusUpdate={handleBulkStatus}
           onClear={() => setSelected([])}
         />
       )}
@@ -252,6 +262,9 @@ export default function ForSalePage() {
           selected={selected}
           onSelectionChange={setSelected}
           actions={actions}
+          onUpdate={(updated) => {
+            setJerseys((prev) => prev.map((j) => j._id === updated._id ? updated : j));
+          }}
         />
       ) : (
         <JerseyGrid jerseys={regularJerseys} loading={loading} actions={actions} />

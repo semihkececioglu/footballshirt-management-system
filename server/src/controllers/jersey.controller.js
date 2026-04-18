@@ -230,6 +230,17 @@ export async function bulkUpdatePrice(req, res, next) {
   }
 }
 
+export async function bulkUpdateStatus(req, res, next) {
+  try {
+    const { ids, status } = req.body;
+    if (!['for_sale', 'not_for_sale'].includes(status)) return next(createError('Geçersiz status', 400));
+    await Jersey.updateMany({ _id: { $in: ids } }, { status });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getFilterOptions(req, res, next) {
   try {
     const { status } = req.query;

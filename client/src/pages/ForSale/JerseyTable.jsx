@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, Edit, Copy, CheckSquare, Trash2, ExternalLink, MoreVertical, Star } from 'lucide-react';
+import { toast } from 'sonner';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ConditionBadge } from '@/components/common/StatusBadge/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -14,15 +16,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
-
+import { jerseyService } from '@/services/api';
 import { useTranslateConstant } from '@/hooks/useTranslateConstant';
+import { LazyImage } from '@/components/common/LazyImage/LazyImage';
 
 function MainThumb({ images }) {
   const main = images?.find((i) => i.isMain) || images?.[0];
-  if (!main?.url) return <div className="w-10 h-12 rounded bg-[var(--bg-secondary)]" />;
-  return (
-    <img src={main.url} alt="" className="w-10 h-12 object-cover rounded" loading="lazy" />
-  );
+  return <LazyImage src={main?.url} alt="" className="w-10 h-12 object-cover rounded" containerClassName="w-10 h-12 rounded" />;
 }
 
 function PlatformLinks({ platforms }) {
@@ -111,35 +111,71 @@ function ActionsMenu({ row, actions, onDeleteRequest }) {
   );
 }
 
-export function JerseyTable({ jerseys, loading, selected, onSelectionChange, actions }) {
+export function JerseyTable({ jerseys, loading, selected, onSelectionChange, actions, onUpdate }) {
   const { t } = useTranslation();
   const formatCurrency = useFormatCurrency();
-  const translateJerseyQuality = useTranslateConstant('jerseyQuality');
   const translateJerseyType = useTranslateConstant('jerseyType');
   const [deleteId, setDeleteId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editingPrice, setEditingPrice] = useState('');
+  const inputRef = useRef(null);
+
+  async function savePrice(id) {
+    const price = Number(editingPrice);
+    if (isNaN(price) || price < 0) { setEditingId(null); return; }
+    try {
+      const fd = new FormData();
+      fd.append('data', JSON.stringify({ sellPrice: price }));
+      const res = await jerseyService.update(id, fd);
+      onUpdate?.(res.data.data);
+      toast.success(t('forSale.priceUpdated'));
+    } catch {
+      toast.error(t('forSale.priceUpdateError'));
+    }
+    setEditingId(null);
+  }
+
+  function startEdit(row) {
+    setEditingId(row._id);
+    setEditingPrice(String(row.sellPrice || 0));
+    setTimeout(() => inputRef.current?.select(), 30);
+  }
 
   const columns = [
     {
       key: 'images',
       label: '',
-      render: (v) => <MainThumb images={v} />,
+      render: (v, row) => (
+        <div
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={(e) => { e.stopPropagation(); actions.onDetail(row); }}
+        >
+          <MainThumb images={v} />
+        </div>
+      ),
       className: 'w-14',
     },
     {
       key: 'teamName',
       label: t('forSale.col.team'),
       sortable: true,
-      render: (v, row) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-[var(--text-primary)] whitespace-nowrap">{v}</span>
-          {row.featured && <Star size={11} className="fill-amber-400 text-amber-400 flex-shrink-0" />}
-        </div>
-      ),
+      render: (v, row) => {
+        const subtitle = [
+          row.season,
+          row.type ? translateJerseyType(row.type) : null,
+          row.brand,
+        ].filter(Boolean).join(' · ');
+        return (
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-[var(--text-primary)]">{v || '—'}</span>
+              {row.featured && <Star size={11} className="fill-amber-400 text-amber-400 flex-shrink-0" />}
+            </div>
+            {subtitle && <p className="text-xs text-[var(--text-muted)] mt-0.5">{subtitle}</p>}
+          </div>
+        );
+      },
     },
-    { key: 'productCode', label: t('forSale.col.code'), className: 'hidden xl:table-cell text-xs text-[var(--text-muted)]' },
-    { key: 'season', label: t('forSale.col.season'), sortable: true, className: 'whitespace-nowrap' },
-    { key: 'type', label: t('forSale.col.type'), render: (v) => translateJerseyType(v) || '—' },
-    { key: 'quality', label: t('forSale.col.quality'), className: 'hidden md:table-cell', render: (v) => translateJerseyQuality(v) },
     {
       key: 'sizeVariants',
       label: t('forSale.col.size'),
@@ -148,34 +184,39 @@ export function JerseyTable({ jerseys, loading, selected, onSelectionChange, act
     {
       key: 'condition',
       label: t('forSale.col.condition'),
-      className: 'hidden lg:table-cell',
+      className: 'hidden md:table-cell',
       render: (v) => <ConditionBadge condition={v} />,
     },
     {
-      key: 'buyPrice',
-      label: t('forSale.col.buyPrice'),
-      className: 'hidden xl:table-cell',
-      render: (v) => <span className="text-sm text-[var(--text-muted)]">{v ? formatCurrency(v) : '—'}</span>,
-    },
-    {
       key: 'sellPrice',
-      label: t('forSale.col.sellPrice'),
+      label: t('forSale.col.price'),
       sortable: true,
-      render: (v) => <span className="font-medium text-[var(--accent)]">{v ? formatCurrency(v) : '—'}</span>,
-    },
-    {
-      key: 'measurements',
-      label: t('forSale.col.measurement'),
-      className: 'hidden lg:table-cell',
-      render: (v) => {
-        if (!v?.armpit && !v?.length) return <span className="text-[var(--text-muted)]">—</span>;
-        const parts = [v.armpit, v.length].filter(Boolean);
-        return (
-          <span className="text-xs text-[var(--text-muted)]">
-            {parts.join('×')}
-          </span>
-        );
-      },
+      render: (v, row) => editingId === row._id ? (
+        <Input
+          ref={inputRef}
+          type="number"
+          value={editingPrice}
+          onChange={(e) => setEditingPrice(e.target.value)}
+          onBlur={() => savePrice(row._id)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); savePrice(row._id); }
+            if (e.key === 'Escape') setEditingId(null);
+          }}
+          className="h-7 w-20 text-sm px-1.5"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        <div
+          onDoubleClick={(e) => { e.stopPropagation(); startEdit(row); }}
+          title={t('forSale.doubleClickToEdit')}
+          className="cursor-default select-none"
+        >
+          {row.buyPrice != null && (
+            <p className="text-xs text-[var(--text-muted)]">{formatCurrency(row.buyPrice)}</p>
+          )}
+          <p className="font-medium text-[var(--accent)]">{v ? formatCurrency(v) : '—'}</p>
+        </div>
+      ),
     },
     {
       key: 'platforms',

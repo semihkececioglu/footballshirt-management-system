@@ -4,7 +4,7 @@ import { upload } from '../middleware/upload.middleware.js';
 import {
   getJerseys, getJersey, createJersey, updateJersey,
   deleteJersey, duplicateJersey, markSold,
-  deleteImage_handler, bulkDelete, bulkUpdatePrice,
+  deleteImage_handler, bulkDelete, bulkUpdatePrice, bulkUpdateStatus,
   getFilterOptions, toggleFeatured,
 } from '../controllers/jersey.controller.js';
 
@@ -15,6 +15,7 @@ router.use(authenticate);
 router.get('/filter-options', getFilterOptions);
 router.delete('/bulk', bulkDelete);
 router.patch('/bulk/price', bulkUpdatePrice);
+router.patch('/bulk/status', bulkUpdateStatus);
 router.post('/images/delete', deleteImage_handler);
 
 // Collection routes
