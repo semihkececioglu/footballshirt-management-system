@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, X, Moon, Sun } from 'lucide-react';
+import { Plus, X, Moon, Sun, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { FormField } from '@/components/forms/JerseyForm/FormField';
-import { settingsService } from '@/services/api';
+import { settingsService, backupService } from '@/services/api';
 import { SETTINGS_CONTACT_PLATFORMS } from '@/lib/constants';
 import { useThemeStore } from '@/store/themeStore';
 import { useLanguageStore, LANGUAGES } from '@/store/languageStore';
@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [contactLinks, setContactLinks] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [backupLoading, setBackupLoading] = useState(false);
 
   useEffect(() => {
     settingsService.get()
@@ -56,6 +57,24 @@ export default function SettingsPage() {
 
   function setLinkField(idx, field, value) {
     setContactLinks((prev) => prev.map((l, i) => i === idx ? { ...l, [field]: value } : l));
+  }
+
+  async function handleBackupDownload() {
+    setBackupLoading(true);
+    try {
+      const res = await backupService.export();
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(t('settings.backupSuccess'));
+    } catch {
+      toast.error(t('settings.backupError'));
+    } finally {
+      setBackupLoading(false);
+    }
   }
 
   async function handleSave(e) {
@@ -210,7 +229,7 @@ export default function SettingsPage() {
                 <Input
                   value={link.label}
                   onChange={(e) => setLinkField(idx, 'label', e.target.value)}
-                  placeholder="Label"
+                  placeholder={t('settings.labelPlaceholder')}
                   className="text-xs"
                 />
                 <Input
@@ -237,6 +256,23 @@ export default function SettingsPage() {
           {saving ? t('common.saving') : t('common.save')}
         </Button>
       </form>
+
+      {/* Data Management */}
+      <div className="space-y-3 rounded-lg border border-[var(--border)] p-4 bg-[var(--bg-card)]">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)] border-b border-[var(--border)] pb-2">
+          {t('settings.dataManagement')}
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-[var(--text-secondary)]">{t('settings.backupTitle')}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('settings.backupDescription')}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleBackupDownload} disabled={backupLoading}>
+            <Download size={14} />
+            {backupLoading ? t('common.loading') : t('settings.downloadBackup')}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

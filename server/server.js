@@ -18,6 +18,7 @@ import statsRoutes from './src/routes/stats.routes.js';
 import reportRoutes from './src/routes/report.routes.js';
 import publicRoutes from './src/routes/public.routes.js';
 import settingsRoutes from './src/routes/settings.routes.js';
+import backupRoutes from './src/routes/backup.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
