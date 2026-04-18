@@ -42,7 +42,9 @@
     "optional": "optional",
     "cannotBeUndone": "This action cannot be undone.",
     "deleteConfirm": "Are you sure you want to delete this?",
-    "records": "records"
+    "records": "records",
+    "noRecords": "No records found",
+    "select": "Select..."
   },
   "app": {
     "title": "Football Jersey Manager",
@@ -156,6 +158,7 @@
   },
   "form": {
     "images": "Images",
+    "teamRequired": "Team name is required",
     "teamInfo": "Team Info",
     "jerseyDetails": "Jersey Details",
     "colors": "Colors",
@@ -171,6 +174,10 @@
     "salesPlatforms": "Sales Platforms",
     "purchaseInfo": "Purchase Info",
     "forResale": "For Resale",
+    "seller": "Seller",
+    "sellerName": "Name / Username",
+    "sellerNamePlaceholder": "Seller name or username...",
+    "sellerPhone": "Phone",
     "uploading": "Uploading images...",
     "brandPlaceholder": "Select brand...",
     "techPlaceholder": "Technology...",
@@ -441,6 +448,19 @@
     "bulkDeleteError": "Bulk delete failed",
     "bulkPriceSuccess": "Prices updated",
     "bulkPriceError": "Could not update prices",
+    "bulkStatus": "Change Status",
+    "statusForSale": "For Sale",
+    "statusNotForSale": "Not For Sale",
+    "bulkStatusSuccess": "Status updated",
+    "bulkStatusError": "Could not update status",
+    "priceUpdated": "Price updated",
+    "priceUpdateError": "Could not update price",
+    "doubleClickToEdit": "Double-click to edit price",
+    "savedFilters": "Saved Filters",
+    "saveFilter": "Save Filter",
+    "noSavedFilters": "No saved filters",
+    "savedFiltersMax": "Maximum {{max}} filters can be saved",
+    "savedFilterName": "Enter filter name:",
     "col": {
       "team": "Team",
       "code": "Code",
@@ -451,9 +471,11 @@
       "condition": "Condition",
       "buyPrice": "Buy",
       "sellPrice": "Sell",
+      "price": "Price",
       "measurement": "Measurement",
       "platforms": "Platforms"
     },
+    "deleteDescription": "This jersey will be permanently deleted.",
     "deleteDialog": {
       "title": "Delete jersey",
       "description": "This jersey will be permanently deleted.",
@@ -486,6 +508,18 @@
     "noSales": "No sales recorded",
     "deleteSale": "Delete Sale",
     "deleteConfirm": "This sale record will be deleted.",
+    "markAsReturned": "Mark as Returned",
+    "returned": "Returned",
+    "returnSuccess": "Return recorded",
+    "returnError": "Could not record return",
+    "returnReason": "Return Reason",
+    "refundAmount": "Refund Amount",
+    "returnReasons": {
+      "defective": "Defective",
+      "customerRequest": "Customer Request",
+      "wrongItem": "Wrong Item",
+      "other": "Other"
+    },
     "col": {
       "date": "Date",
       "team": "Team",
@@ -537,7 +571,8 @@
       "manualEntry": "Not in Inventory →",
       "selectedJersey": "✓ {{name}} - {{details}}",
       "profit": "Profit: {{amount}}",
-      "allPayments": "All Payments"
+      "allPayments": "All Payments",
+      "buyerPhone": "Buyer Phone"
     },
     "last3months": "Last 3 months",
     "recordCountSuffix": "sales"
@@ -629,7 +664,15 @@
       "addSuccess": "Wishlist item added",
       "saveError": "Could not save"
     },
-    "seeListing": "See Listing"
+    "seeListing": "See Listing",
+    "searchPlaceholder": "Search team...",
+    "bulkSelected": "{{count}} items selected",
+    "bulkDeleteConfirm": "{{count}} items will be deleted.",
+    "bulkCancelConfirm": "{{count}} items will be cancelled.",
+    "bulkDeleteSuccess": "Selected items deleted",
+    "bulkDeleteError": "Could not delete",
+    "bulkCancelSuccess": "Cancelled",
+    "bulkCancelError": "Operation failed"
   },
   "sellers": {
     "title": "Sellers",
@@ -645,7 +688,9 @@
       "rating": "Rating",
       "salesCount": "Sales Count",
       "notes": "Notes",
-      "username": "Username"
+      "username": "Username",
+      "purchases": "Purchases / Spent",
+      "lastPurchase": "Last Purchase"
     },
     "form": {
       "name": "Full Name or Username",
@@ -703,7 +748,11 @@
       "condition": "Condition",
       "size": "Size",
       "brand": "Brand",
-      "forSale": "For Sale"
+      "forSale": "For Sale",
+      "seller": "Seller",
+      "sellerPlaceholder": "Seller name...",
+      "dateFrom": "Date (From)",
+      "dateTo": "Date (To)"
     },
     "status": {
       "forSale": "For Sale",
@@ -732,7 +781,12 @@
       "images": "Images",
       "add": "Add"
     },
-    "recordCount": "{{count}} records"
+    "viewDetail": "View Detail",
+    "recordCount": "{{count}} records",
+    "bulkSelected": "{{count}} records selected",
+    "bulkDeleteConfirm": "{{count}} records will be deleted.",
+    "bulkDeleteSuccess": "Selected records deleted",
+    "bulkDeleteError": "Could not delete"
   },
   "reminders": {
     "title": "Reminders",
@@ -779,7 +833,9 @@
       "usernamePlaceholder": "Username",
       "requestNotePlaceholder": "Write what the contact is looking for...",
       "teamPlaceholder": "e.g. Manchester United",
+      "season": "Season",
       "seasonPlaceholder": "e.g. 2023/24",
+      "type": "Type",
       "typePlaceholder": "e.g. Home"
     },
     "toast": {
@@ -808,6 +864,8 @@
     "netProfit": "Net Profit",
     "activeListings": "Active Listings",
     "stockValue": "Stock Value",
+    "avgSaleTime": "Avg. Sale Time",
+    "avgSaleTimeDays": "{{days}} days",
     "avgSellPrice": "Avg. Sale Price",
     "avgProfit": "Avg. Profit",
     "topTeams": "Top 10 Selling Teams",
@@ -818,7 +876,14 @@
     "team": "Team",
     "platform": "Platform",
     "noData": "No data yet",
-    "loadError": "Failed to load data"
+    "loadError": "Failed to load data",
+    "purchaseOverview": "Purchase Overview",
+    "totalPurchaseItems": "Items Purchased",
+    "totalPurchaseSpend": "Purchase Spend",
+    "totalPurchased": "Purchase Records",
+    "monthlyPurchases": "Monthly Purchases",
+    "purchaseCount": "Purchases",
+    "purchaseSpend": "Spend"
   },
   "reports": {
     "title": "Reports",
@@ -833,6 +898,9 @@
     "selectPeriod": "Select a period from the left",
     "reportNotFound": "Report not found",
     "monthlySummary": "Monthly performance summary",
+    "export": "Export",
+    "exportExcel": "Download Excel",
+    "exportCSV": "Download CSV",
     "totalRevenue": "Total Revenue",
     "totalProfit": "Total Profit",
     "totalSales": "Total Sales",
@@ -848,6 +916,8 @@
     "platformBreakdown": "Platform Breakdown",
     "salesList": "Sales",
     "purchasesList": "Purchases",
+    "totalPurchases": "Purchases",
+    "totalPurchaseSpend": "Total Spent",
     "noRecords": "No records found for this period.",
     "col": {
       "date": "Date",
@@ -911,7 +981,10 @@
       "date": "Date",
       "status": "Status",
       "notes": "Notes",
-      "shortDesc": "Short description..."
+      "shortDesc": "Short description...",
+      "sharePlatformPlaceholder": "Instagram, Twitter...",
+      "listPlatformPlaceholder": "eBay, Trendyol, Letgo...",
+      "notesPlaceholder": "Details, link, price..."
     }
   },
   "settings": {
@@ -923,6 +996,8 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "products": "Storefront Settings",
+    "storefront": "Storefront Settings",
+    "labelPlaceholder": "Display name",
     "storeTitle": "Storefront Title",
     "storeTitlePlaceholder": "My Jersey Collection",
     "contactLinks": "Contact Links",
@@ -932,7 +1007,13 @@
     "url": "URL",
     "saved": "Settings saved",
     "saveError": "Save error",
-    "loadError": "Load error"
+    "loadError": "Load error",
+    "dataManagement": "Data Management",
+    "backupTitle": "Download Backup",
+    "backupDescription": "Export all data in JSON format",
+    "downloadBackup": "Download Backup",
+    "backupSuccess": "Backup downloaded",
+    "backupError": "Could not download backup"
   },
   "months": {
     "jan": "Jan",

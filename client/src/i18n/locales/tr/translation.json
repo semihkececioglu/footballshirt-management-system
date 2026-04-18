@@ -42,7 +42,9 @@
     "optional": "isteğe bağlı",
     "cannotBeUndone": "Bu işlem geri alınamaz.",
     "deleteConfirm": "Bunu silmek istediğinizden emin misiniz?",
-    "records": "kayıt"
+    "records": "kayıt",
+    "noRecords": "Kayıt bulunamadı",
+    "select": "Seç..."
   },
   "app": {
     "title": "Football Jersey Manager",
@@ -156,6 +158,7 @@
   },
   "form": {
     "images": "Görseller",
+    "teamRequired": "Takım adı zorunludur",
     "teamInfo": "Takım Bilgisi",
     "jerseyDetails": "Forma Detayları",
     "colors": "Renkler",
@@ -171,6 +174,10 @@
     "salesPlatforms": "Satış Platformları",
     "purchaseInfo": "Alış Bilgisi",
     "forResale": "Tekrar satılacak",
+    "seller": "Satıcı",
+    "sellerName": "Ad / Kullanıcı Adı",
+    "sellerNamePlaceholder": "Satıcı adı veya kullanıcı adı...",
+    "sellerPhone": "Telefon",
     "uploading": "Görseller yükleniyor...",
     "brandPlaceholder": "Marka seçin...",
     "techPlaceholder": "Teknoloji...",
@@ -441,6 +448,19 @@
     "bulkDeleteError": "Toplu silme başarısız",
     "bulkPriceSuccess": "Fiyatlar güncellendi",
     "bulkPriceError": "Fiyatlar güncellenemedi",
+    "bulkStatus": "Durum Değiştir",
+    "statusForSale": "Satılık",
+    "statusNotForSale": "Satılık Değil",
+    "bulkStatusSuccess": "Durum güncellendi",
+    "bulkStatusError": "Durum güncellenemedi",
+    "priceUpdated": "Fiyat güncellendi",
+    "priceUpdateError": "Fiyat güncellenemedi",
+    "doubleClickToEdit": "Fiyatı düzenlemek için çift tıkla",
+    "savedFilters": "Kaydedilen Filtreler",
+    "saveFilter": "Filtreyi Kaydet",
+    "noSavedFilters": "Kayıtlı filtre yok",
+    "savedFiltersMax": "En fazla {{max}} filtre kaydedilebilir",
+    "savedFilterName": "Filtre adı girin:",
     "col": {
       "team": "Takım",
       "code": "Kod",
@@ -451,9 +471,11 @@
       "condition": "Kondisyon",
       "buyPrice": "Alış",
       "sellPrice": "Satış",
+      "price": "Fiyat",
       "measurement": "Ölçü",
       "platforms": "Platformlar"
     },
+    "deleteDescription": "Bu forma kalıcı olarak silinecek.",
     "deleteDialog": {
       "title": "Formayı sil",
       "description": "Bu forma kalıcı olarak silinecek.",
@@ -486,6 +508,18 @@
     "noSales": "Henüz satış kaydedilmemiş",
     "deleteSale": "Satışı Sil",
     "deleteConfirm": "Bu satış kaydı silinecek.",
+    "markAsReturned": "İade Et",
+    "returned": "İade edildi",
+    "returnSuccess": "İade kaydedildi",
+    "returnError": "İade kaydedilemedi",
+    "returnReason": "İade Nedeni",
+    "refundAmount": "İade Tutarı",
+    "returnReasons": {
+      "defective": "Kusurlu",
+      "customerRequest": "Müşteri İsteği",
+      "wrongItem": "Yanlış Ürün",
+      "other": "Diğer"
+    },
     "col": {
       "date": "Tarih",
       "team": "Takım",
@@ -537,7 +571,8 @@
       "manualEntry": "Envanterde yok →",
       "selectedJersey": "✓ {{name}} - {{details}}",
       "profit": "Kar: {{amount}}",
-      "allPayments": "Tüm Ödemeler"
+      "allPayments": "Tüm Ödemeler",
+      "buyerPhone": "Alıcı Telefonu"
     },
     "last3months": "Son 3 ay",
     "recordCountSuffix": "kayıt"
@@ -629,7 +664,15 @@
       "addSuccess": "İstek eklendi",
       "saveError": "Kaydedilemedi"
     },
-    "seeListing": "İlanı Gör"
+    "seeListing": "İlanı Gör",
+    "searchPlaceholder": "Takım ara...",
+    "bulkSelected": "{{count}} öğe seçili",
+    "bulkDeleteConfirm": "{{count}} öğe silinecek.",
+    "bulkCancelConfirm": "{{count}} öğe iptal edilecek.",
+    "bulkDeleteSuccess": "Seçilen öğeler silindi",
+    "bulkDeleteError": "Silinemedi",
+    "bulkCancelSuccess": "İptal edildi",
+    "bulkCancelError": "İşlem başarısız"
   },
   "sellers": {
     "title": "Satıcılar",
@@ -645,7 +688,9 @@
       "rating": "Puan",
       "salesCount": "Satış Sayısı",
       "notes": "Notlar",
-      "username": "Kullanıcı Adı"
+      "username": "Kullanıcı Adı",
+      "purchases": "Alım / Harcama",
+      "lastPurchase": "Son Alım"
     },
     "form": {
       "name": "Tam Ad veya Kullanıcı Adı",
@@ -703,7 +748,11 @@
       "condition": "Kondisyon",
       "size": "Beden",
       "brand": "Marka",
-      "forSale": "Satışlık"
+      "forSale": "Satışlık",
+      "seller": "Satıcı",
+      "sellerPlaceholder": "Satıcı adı...",
+      "dateFrom": "Tarih (Başlangıç)",
+      "dateTo": "Tarih (Bitiş)"
     },
     "status": {
       "forSale": "Satışlık",
@@ -732,7 +781,12 @@
       "images": "Görseller",
       "add": "Ekle"
     },
-    "recordCount": "{{count}} kayıt"
+    "viewDetail": "Detay Gör",
+    "recordCount": "{{count}} kayıt",
+    "bulkSelected": "{{count}} kayıt seçili",
+    "bulkDeleteConfirm": "{{count}} kayıt silinecek.",
+    "bulkDeleteSuccess": "Seçilen kayıtlar silindi",
+    "bulkDeleteError": "Silinemedi"
   },
   "reminders": {
     "title": "Hatırlatıcılar",
@@ -779,7 +833,9 @@
       "usernamePlaceholder": "Kullanıcı adı",
       "requestNotePlaceholder": "Kişinin ne aradığını yazın...",
       "teamPlaceholder": "Örn: Beşiktaş",
+      "season": "Sezon",
       "seasonPlaceholder": "Örn: 2023/24",
+      "type": "Tür",
       "typePlaceholder": "Örn: Home"
     },
     "toast": {
@@ -808,6 +864,8 @@
     "netProfit": "Net Kâr",
     "activeListings": "Aktif İlanlar",
     "stockValue": "Stok Değeri",
+    "avgSaleTime": "Ort. Satış Süresi",
+    "avgSaleTimeDays": "{{days}} gün",
     "avgSellPrice": "Ort. Satış Fiyatı",
     "avgProfit": "Ort. Kâr",
     "topTeams": "En Çok Satan 10 Takım",
@@ -818,7 +876,14 @@
     "team": "Takım",
     "platform": "Platform",
     "noData": "Henüz veri yok",
-    "loadError": "Veriler yüklenemedi"
+    "loadError": "Veriler yüklenemedi",
+    "purchaseOverview": "Alım Özeti",
+    "totalPurchaseItems": "Alınan Ürün",
+    "totalPurchaseSpend": "Alım Harcaması",
+    "totalPurchased": "Alım Kaydı",
+    "monthlyPurchases": "Aylık Alımlar",
+    "purchaseCount": "Alım",
+    "purchaseSpend": "Harcama"
   },
   "reports": {
     "title": "Raporlar",
@@ -833,6 +898,9 @@
     "selectPeriod": "Soldan bir dönem seçin",
     "reportNotFound": "Rapor bulunamadı",
     "monthlySummary": "Aylık performans özeti",
+    "export": "Dışa Aktar",
+    "exportExcel": "Excel İndir",
+    "exportCSV": "CSV İndir",
     "totalRevenue": "Toplam Gelir",
     "totalProfit": "Toplam Kâr",
     "totalSales": "Toplam Satış",
@@ -848,6 +916,8 @@
     "platformBreakdown": "Platform Dökümü",
     "salesList": "Satışlar",
     "purchasesList": "Alımlar",
+    "totalPurchases": "Alım Sayısı",
+    "totalPurchaseSpend": "Toplam Harcama",
     "noRecords": "Bu dönem için kayıt bulunamadı.",
     "col": {
       "date": "Tarih",
@@ -911,7 +981,10 @@
       "date": "Tarih",
       "status": "Durum",
       "notes": "Notlar",
-      "shortDesc": "Kısa açıklama..."
+      "shortDesc": "Kısa açıklama...",
+      "sharePlatformPlaceholder": "Instagram, Twitter...",
+      "listPlatformPlaceholder": "eBay, Trendyol, Letgo...",
+      "notesPlaceholder": "Detaylar, bağlantı, fiyat..."
     }
   },
   "settings": {
@@ -923,6 +996,8 @@
     "themeLight": "Açık",
     "themeDark": "Koyu",
     "products": "Vitrin Ayarları",
+    "storefront": "Vitrin Ayarları",
+    "labelPlaceholder": "Görünen ad",
     "storeTitle": "Vitrin Başlığı",
     "storeTitlePlaceholder": "Forma Koleksiyonum",
     "contactLinks": "İletişim Linkleri",
@@ -932,7 +1007,13 @@
     "url": "URL",
     "saved": "Ayarlar kaydedildi",
     "saveError": "Kayıt hatası",
-    "loadError": "Yükleme hatası"
+    "loadError": "Yükleme hatası",
+    "dataManagement": "Veri Yönetimi",
+    "backupTitle": "Yedek İndir",
+    "backupDescription": "Tüm verileri JSON formatında dışa aktarın",
+    "downloadBackup": "Yedeği İndir",
+    "backupSuccess": "Yedek indirme başarılı",
+    "backupError": "Yedek indirilemedi"
   },
   "months": {
     "jan": "Oca",
