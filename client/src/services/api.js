@@ -10,12 +10,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 → login'e yönlendir
+// 401 → tüm auth state'i temizle ve login'e yönlendir
+let loggingOut = false;
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !loggingOut) {
+      loggingOut = true;
       localStorage.removeItem('token');
+      localStorage.removeItem('auth-storage'); // Zustand persist temizle
+      setTimeout(() => { loggingOut = false; }, 2000);
       window.location.href = '/login';
     }
     return Promise.reject(err);
@@ -36,6 +40,7 @@ export const jerseyService = {
   deleteImage: (publicId) => api.post('/jerseys/images/delete', { publicId }),
   bulkDelete: (ids) => api.delete('/jerseys/bulk', { data: { ids } }),
   bulkUpdatePrice: (ids, sellPrice) => api.patch('/jerseys/bulk/price', { ids, sellPrice }),
+  bulkUpdateStatus: (ids, status) => api.patch('/jerseys/bulk/status', { ids, status }),
   getFilterOptions: (params) => api.get('/jerseys/filter-options', { params }),
   toggleFeatured: (id) => api.patch(`/jerseys/${id}/featured`),
 };
@@ -48,6 +53,7 @@ export const saleService = {
   create: (data) => api.post('/sales', data),
   update: (id, data) => api.put(`/sales/${id}`, data),
   delete: (id) => api.delete(`/sales/${id}`),
+  markAsReturned: (id, data) => api.patch(`/sales/${id}/return`, data),
 };
 
 // Purchase servisleri
@@ -59,11 +65,13 @@ export const purchaseService = {
   delete: (id) => api.delete(`/purchases/${id}`),
   promote: (id, data) => api.post(`/purchases/${id}/promote`, data),
   demote: (id) => api.delete(`/purchases/${id}/demote`),
+  bulkDelete: (ids) => api.delete('/purchases/bulk', { data: { ids } }),
 };
 
 // Seller servisleri
 export const sellerService = {
   getAll: () => api.get('/sellers'),
+  getStats: () => api.get('/sellers/stats'),
   create: (data) => api.post('/sellers', data),
   update: (id, data) => api.put(`/sellers/${id}`, data),
   delete: (id) => api.delete(`/sellers/${id}`),
@@ -92,6 +100,8 @@ export const wishlistService = {
   },
   delete: (id) => api.delete(`/wishlist/${id}`),
   reorder: (items) => api.put('/wishlist/reorder', { items }),
+  bulkDelete: (ids) => api.delete('/wishlist/bulk', { data: { ids } }),
+  bulkCancel: (ids) => api.patch('/wishlist/bulk-cancel', { ids }),
 };
 
 // Upload servisleri
@@ -126,10 +136,12 @@ export const statsService = {
   counts: () => api.get('/stats/counts'),
   overview: () => api.get('/stats/overview'),
   monthlySales: (year) => api.get('/stats/monthly-sales', { params: { year } }),
+  monthlyPurchases: (year) => api.get('/stats/monthly-purchases', { params: { year } }),
   teams: () => api.get('/stats/teams'),
   sizes: () => api.get('/stats/sizes'),
   platforms: () => api.get('/stats/platforms'),
   buyers: () => api.get('/stats/buyers'),
+  averageSaleTime: () => api.get('/stats/average-sale-time'),
 };
 
 // Report servisleri
@@ -151,4 +163,9 @@ export const publicService = {
 export const settingsService = {
   get: () => api.get('/settings'),
   update: (data) => api.put('/settings', data),
+};
+
+// Backup servisleri
+export const backupService = {
+  export: () => api.get('/backup/export', { responseType: 'blob' }),
 };
