@@ -3,6 +3,7 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Reusable DataTable
@@ -26,12 +27,13 @@ export function DataTable({
   selectedIds = [],
   onSelectionChange,
   getRowId = (r) => r._id,
-  emptyText = 'Kayıt bulunamadı',
+  emptyText,
   onSort,
   sort,
   rowClassName,
   onRowClick,
 }) {
+  const { t } = useTranslation();
   const [localSort, setLocalSort] = useState({ key: null, dir: 'asc' });
 
   const activeSort = sort || localSort;
@@ -124,7 +126,7 @@ export function DataTable({
                   colSpan={columns.length + (selectable ? 1 : 0)}
                   className="px-3 py-12 text-center text-[var(--text-muted)]"
                 >
-                  {emptyText}
+                  {emptyText ?? t('common.noRecords')}
                 </td>
               </tr>
             ) : (
