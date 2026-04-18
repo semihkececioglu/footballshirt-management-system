@@ -15,6 +15,13 @@ export async function getMonthlyReport(req, res, next) {
     const totalRevenue = sales.reduce((s, sale) => s + sale.salePrice, 0);
     const totalCost = sales.reduce((s, sale) => s + (sale.buyPrice || 0), 0);
 
+    const totalPurchaseSpend = purchases.reduce((sum, p) => {
+      const qty = p.sizeVariants?.length
+        ? p.sizeVariants.reduce((s, v) => s + (v.stockCount || 1), 0)
+        : 1;
+      return sum + (p.buyPrice || 0) * qty;
+    }, 0);
+
     const platformSummary = sales.reduce((acc, sale) => {
       const key = sale.platform || 'Diğer';
       if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
@@ -34,6 +41,8 @@ export async function getMonthlyReport(req, res, next) {
         totalCost,
         netProfit: totalRevenue - totalCost,
         totalSold: sales.length,
+        totalPurchases: purchases.length,
+        totalPurchaseSpend,
       profitMargin: totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue * 100).toFixed(1) : 0,
         platforms: Object.entries(platformSummary).map(([platform, d]) => ({ platform, count: d.count, revenue: d.revenue })),
       },
