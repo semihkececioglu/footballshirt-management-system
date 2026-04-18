@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { reportService } from '@/services/api';
 import { formatDate } from '@/lib/utils';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
@@ -91,6 +96,52 @@ export default function ReportsPage() {
   function selectMonth(year, month) {
     setSelectedYear(year);
     setSelectedMonth(month);
+  }
+
+  function handleExportExcel() {
+    if (!report) return;
+    const wb = XLSX.utils.book_new();
+    // Sales sheet
+    const salesData = (report.sales || []).map((s) => ({
+      [t('reports.tableHeader.date')]: s.soldAt ? formatDate(s.soldAt) : '',
+      [t('reports.tableHeader.jersey')]: s.jerseyId?.teamName || s.teamName || '',
+      [t('reports.tableHeader.buyer')]: s.buyerName || '',
+      [t('reports.tableHeader.platform')]: s.platform || '',
+      [t('reports.tableHeader.buyPrice')]: s.buyPrice || 0,
+      [t('reports.tableHeader.sellPrice')]: s.salePrice || 0,
+      [t('reports.tableHeader.profit')]: (s.salePrice || 0) - (s.buyPrice || 0),
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(salesData), t('reports.salesList'));
+    // Purchases sheet
+    const purchasesData = (report.purchases || []).map((p) => ({
+      [t('reports.tableHeader.date')]: p.purchaseDate ? formatDate(p.purchaseDate) : '',
+      [t('reports.tableHeader.jersey')]: p.teamName || '',
+      [t('reports.tableHeader.platform')]: p.platform || '',
+      [t('reports.tableHeader.price')]: p.buyPrice || 0,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchasesData), t('reports.purchasesList'));
+    XLSX.writeFile(wb, `report_${selectedYear}_${String(selectedMonth).padStart(2, '0')}.xlsx`);
+  }
+
+  function handleExportCSV() {
+    if (!report) return;
+    const headers = [t('reports.tableHeader.date'), t('reports.tableHeader.jersey'), t('reports.tableHeader.buyer'), t('reports.tableHeader.platform'), t('reports.tableHeader.buyPrice'), t('reports.tableHeader.sellPrice'), t('reports.tableHeader.profit')];
+    const rows = (report.sales || []).map((s) => [
+      s.soldAt ? formatDate(s.soldAt) : '',
+      s.jerseyId?.teamName || s.teamName || '',
+      s.buyerName || '',
+      s.platform || '',
+      s.buyPrice || 0,
+      s.salePrice || 0,
+      (s.salePrice || 0) - (s.buyPrice || 0),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report_${selectedYear}_${String(selectedMonth).padStart(2, '0')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const sortedYears = Object.keys(available).sort((a, b) => Number(b) - Number(a));
@@ -186,11 +237,24 @@ export default function ReportsPage() {
         ) : (
           <div className="space-y-5">
             {/* Title */}
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
-                {MONTHS[Number(selectedMonth) - 1]} {selectedYear} {t('reports.monthlyReport')}
-              </h2>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('reports.monthlySummary')}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                  {MONTHS[Number(selectedMonth) - 1]} {selectedYear} {t('reports.monthlyReport')}
+                </h2>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('reports.monthlySummary')}</p>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                    <Download size={14} /> {t('reports.export')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportExcel}>{t('reports.exportExcel')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCSV}>{t('reports.exportCSV')}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Summary Cards */}
@@ -224,6 +288,21 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
+
+            {/* Purchase Summary Cards */}
+            {(report.totalPurchases > 0 || report.totalPurchaseSpend > 0) && (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: t('reports.totalPurchases'), value: report.totalPurchases ?? 0 },
+                  { label: t('reports.totalPurchaseSpend'), value: formatCurrency(report.totalPurchaseSpend ?? 0) },
+                ].map((card) => (
+                  <div key={card.label} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">{card.label}</p>
+                    <p className="text-xl font-semibold mt-1 text-[var(--text-primary)]">{card.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Platform Breakdown */}
             {report.platforms && report.platforms.length > 0 && (
@@ -271,12 +350,19 @@ export default function ReportsPage() {
                     {report.sales.map((sale, i) => {
                       const profit = (sale.salePrice ?? 0) - (sale.buyPrice || 0);
                       const hasBuyPrice = sale.buyPrice > 0;
+                      const saleSeason = sale.jerseyId?.season || sale.season;
+                      const saleType = sale.jerseyId?.type || sale.type;
                       return (
                       <tr key={i} className="border-b border-[var(--border)] last:border-0">
                         <td className="py-2">
                           <span className="text-[var(--text-primary)] font-medium">
                             {sale.jerseyId?.teamName || sale.teamName || '—'}
                           </span>
+                          {(saleSeason || saleType) && (
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                              {[saleSeason, saleType].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
                         </td>
                         <td className="py-2 text-[var(--text-muted)] hidden sm:table-cell">
                           {sale.buyerName || '—'}
@@ -319,24 +405,39 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {report.purchases.map((purchase, i) => (
-                      <tr key={i} className="border-b border-[var(--border)] last:border-0">
-                        <td className="py-2">
-                          <span className="text-[var(--text-primary)] font-medium">
-                            {purchase.teamName || '—'}
-                          </span>
-                        </td>
-                        <td className="py-2 text-[var(--text-muted)] hidden sm:table-cell">
-                          {purchase.platform || '—'}
-                        </td>
-                        <td className="py-2 text-right font-medium text-[var(--text-primary)]">
-                          {formatCurrency(purchase.buyPrice ?? 0)}
-                        </td>
-                        <td className="py-2 text-right text-[var(--text-muted)] hidden md:table-cell">
-                          {formatDate(purchase.purchaseDate)}
-                        </td>
-                      </tr>
-                    ))}
+                    {report.purchases.map((purchase, i) => {
+                      const totalQty = purchase.sizeVariants?.length
+                        ? purchase.sizeVariants.reduce((s, v) => s + (v.stockCount || 1), 0)
+                        : 1;
+                      return (
+                        <tr key={i} className="border-b border-[var(--border)] last:border-0">
+                          <td className="py-2">
+                            <span className="text-[var(--text-primary)] font-medium">
+                              {purchase.teamName || '—'}
+                            </span>
+                            {(purchase.season || purchase.type) && (
+                              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                                {[purchase.season, purchase.type].filter(Boolean).join(' · ')}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-2 text-[var(--text-muted)] hidden sm:table-cell">
+                            {purchase.platform || '—'}
+                          </td>
+                          <td className="py-2 text-right font-medium text-[var(--text-primary)]">
+                            <span>{formatCurrency((purchase.buyPrice ?? 0) * totalQty)}</span>
+                            {totalQty > 1 && (
+                              <span className="block text-[10px] text-[var(--text-muted)]">
+                                {formatCurrency(purchase.buyPrice ?? 0)} × {totalQty}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 text-right text-[var(--text-muted)] hidden md:table-cell">
+                            {formatDate(purchase.purchaseDate)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
