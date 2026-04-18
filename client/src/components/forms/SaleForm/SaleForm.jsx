@@ -1,16 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormField } from '@/components/forms/JerseyForm/FormField';
 import { Input } from '@/components/ui/input';
 import { PhoneInput } from '@/components/ui/PhoneInput';
+import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SelectSheet } from '@/components/ui/select-sheet';
+import { DatePicker } from '@/components/ui/date-picker';
 import { PLATFORMS, PAYMENT_METHODS } from '@/lib/constants';
-import { jerseyService } from '@/services/api';
+import { jerseyService, saleService } from '@/services/api';
 import { useTranslateConstant } from '@/hooks/useTranslateConstant';
 import { useCurrencyStore, CURRENCIES } from '@/store/currencyStore';
 
@@ -19,7 +21,18 @@ export function SaleForm({ jersey, onSuccess, onCancel }) {
   const { currency } = useCurrencyStore();
   const symbol = CURRENCIES.find((c) => c.code === currency)?.symbol || '₺';
   const translateJerseyType = useTranslateConstant('jerseyType');
+  const [buyerSuggestions, setBuyerSuggestions] = useState({ buyerNames: [], buyerUsernames: [] });
   const hasVariants = jersey?.sizeVariants?.length > 0;
+
+  useEffect(() => {
+    saleService.getFilterOptions()
+      .then((res) => setBuyerSuggestions({
+        buyerNames: res.data.data?.buyerNames || [],
+        buyerUsernames: res.data.data?.buyerUsernames || [],
+      }))
+      .catch(() => {});
+  }, []);
+
   const availableVariants = hasVariants
     ? jersey.sizeVariants.filter((v) => v.stockCount > 0)
     : [];
@@ -45,6 +58,21 @@ export function SaleForm({ jersey, onSuccess, onCancel }) {
     }
   }
 
+  const platformOptions = PLATFORMS.map((p) => ({
+    value: p,
+    label: t(`const.platform.${p}`, { defaultValue: p }),
+  }));
+
+  const paymentOptions = PAYMENT_METHODS.map((m) => ({
+    value: m,
+    label: t(`const.payment_method.${m}`, { defaultValue: m }),
+  }));
+
+  const sizeOptions = availableVariants.map((v) => ({
+    value: v.size,
+    label: `${v.size} (${v.stockCount} ${t('form.stockUnit')})`,
+  }));
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="p-3 rounded-lg bg-[var(--bg-secondary)] text-sm text-[var(--text-secondary)]">
@@ -61,64 +89,106 @@ export function SaleForm({ jersey, onSuccess, onCancel }) {
               control={control}
               rules={{ required: true }}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue placeholder={t('form.sizePlaceholder')} /></SelectTrigger>
-                  <SelectContent>
-                    {availableVariants.map((v) => (
-                      <SelectItem key={v.size} value={v.size}>
-                        {v.size} ({v.stockCount} {t('form.stockUnit')})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('form.sizePlaceholder')}
+                  options={sizeOptions}
+                  label={t('form.size')}
+                />
               )}
             />
           </FormField>
         )}
 
         <FormField label={t('form.buyerName')}>
-          <Input {...register('buyerName')} placeholder={t('form.buyerNamePlaceholder')} />
-        </FormField>
-        <FormField label={t('form.buyerUsernameLabel')}>
-          <Input {...register('buyerUsername')} placeholder={t('form.buyerUsernamePlaceholder')} />
-        </FormField>
-        <FormField label={t('form.buyerPhone')}>
           <Controller
-            name="buyerPhone"
+            name="buyerName"
             control={control}
             render={({ field }) => (
-              <PhoneInput value={field.value || ''} onChange={field.onChange} />
+              <Combobox
+                options={buyerSuggestions.buyerNames}
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder={t('form.buyerNamePlaceholder')}
+                allowCustom
+                clearable
+              />
             )}
           />
         </FormField>
-        <FormField label={t('form.saleDate')}>
-          <Input type="date" {...register('soldAt')} />
+
+        <FormField label={t('form.buyerUsernameLabel')}>
+          <Controller
+            name="buyerUsername"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                options={buyerSuggestions.buyerUsernames}
+                value={field.value || ''}
+                onChange={field.onChange}
+                placeholder={t('form.buyerUsernamePlaceholder')}
+                allowCustom
+                clearable
+              />
+            )}
+          />
         </FormField>
+
+        <div className="col-span-2">
+          <FormField label={t('form.buyerPhone')}>
+            <Controller
+              name="buyerPhone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput value={field.value || ''} onChange={field.onChange} />
+              )}
+            />
+          </FormField>
+        </div>
+
+        <FormField label={t('form.saleDate')}>
+          <Controller
+            name="soldAt"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                placeholder={t('form.saleDate')}
+              />
+            )}
+          />
+        </FormField>
+
         <FormField label={t('form.platform')}>
           <Controller
             name="platform"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue placeholder={t('form.platform')} /></SelectTrigger>
-                <SelectContent>
-                  {PLATFORMS.map((p) => <SelectItem key={p} value={p}>{t(`const.platform.${p}`, { defaultValue: p })}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SelectSheet
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('form.platform')}
+                options={platformOptions}
+                label={t('form.platform')}
+              />
             )}
           />
         </FormField>
+
         <FormField label={t('form.paymentMethod')}>
           <Controller
             name="paymentMethod"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue placeholder={t('form.paymentPlaceholder')} /></SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{t(`const.payment_method.${m}`, { defaultValue: m })}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <SelectSheet
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder={t('form.paymentPlaceholder')}
+                options={paymentOptions}
+                label={t('form.paymentMethod')}
+              />
             )}
           />
         </FormField>

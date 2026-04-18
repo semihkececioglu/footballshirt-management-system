@@ -1,22 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
+  ResponsiveModal, ResponsiveModalContent, ResponsiveModalHeader, ResponsiveModalTitle,
+} from '@/components/ui/responsive-modal';
 import { SaleForm } from '@/components/forms/SaleForm/SaleForm';
 
 export function SaleDialog({ open, jersey, onSuccess, onClose }) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('saleDialog.title')}</DialogTitle>
-          <DialogDescription>{t('saleDialog.subtitle')}</DialogDescription>
-        </DialogHeader>
+    <ResponsiveModal open={open} onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveModalContent className="max-w-md">
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle>{t('saleDialog.title')}</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
         {open && jersey && (
           <SaleForm jersey={jersey} onSuccess={onSuccess} onCancel={onClose} />
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 }

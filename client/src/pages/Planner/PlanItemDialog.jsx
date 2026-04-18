@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, Share2, ShoppingCart, CheckSquare, Search, X } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalFooter,
+} from '@/components/ui/responsive-modal';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -190,11 +190,11 @@ export default function PlanItemDialog({ open, onOpenChange, date, editItem, onS
   const title = editItem ? t('planner.editPlan') : `${t('planner.addPlan')} — ${date?.toLocaleDateString(locale, { day: 'numeric', month: 'long' }) ?? ''}`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-sm">{title}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveModal open={open} onOpenChange={onOpenChange}>
+      <ResponsiveModalContent className="max-w-md">
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle className="text-sm">{title}</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Type selector */}
@@ -245,7 +245,7 @@ export default function PlanItemDialog({ open, onOpenChange, date, editItem, onS
               <Input
                 value={form.platform}
                 onChange={(e) => set('platform', e.target.value)}
-                placeholder={form.type === 'share' ? 'Instagram, Twitter...' : 'eBay, Trendyol, Letgo...'}
+                placeholder={form.type === 'share' ? t('planner.form.sharePlatformPlaceholder') : t('planner.form.listPlatformPlaceholder')}
                 className="h-8 text-xs"
               />
             </div>
@@ -267,7 +267,7 @@ export default function PlanItemDialog({ open, onOpenChange, date, editItem, onS
             <Textarea
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
-              placeholder="Detaylar, bağlantı, fiyat..."
+              placeholder={t('planner.form.notesPlaceholder')}
               className="text-xs min-h-[60px] resize-none"
               rows={2}
             />
@@ -286,7 +286,7 @@ export default function PlanItemDialog({ open, onOpenChange, date, editItem, onS
             </label>
           )}
 
-          <DialogFooter>
+          <ResponsiveModalFooter>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
@@ -301,9 +301,9 @@ export default function PlanItemDialog({ open, onOpenChange, date, editItem, onS
             >
               {saving ? t('common.saving') : editItem ? t('common.save') : t('common.add')}
             </button>
-          </DialogFooter>
+          </ResponsiveModalFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 }

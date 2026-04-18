@@ -1,17 +1,20 @@
 import { useTranslation } from 'react-i18next';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+} from '@/components/ui/responsive-modal';
 import { JerseyForm } from '@/components/forms/JerseyForm/JerseyForm';
 
 export function JerseyFormDialog({ open, jersey, onSuccess, onClose }) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{jersey ? t('jersey.editForm') : t('jersey.addForm')}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveModal open={open} onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveModalContent className="max-w-3xl">
+        <ResponsiveModalHeader>
+          <ResponsiveModalTitle>{jersey ? t('jersey.editForm') : t('jersey.addForm')}</ResponsiveModalTitle>
+        </ResponsiveModalHeader>
         {open && (
           <JerseyForm
             jersey={jersey}
@@ -19,7 +22,7 @@ export function JerseyFormDialog({ open, jersey, onSuccess, onClose }) {
             onCancel={onClose}
           />
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 }

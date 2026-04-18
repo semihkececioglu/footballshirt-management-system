@@ -20,9 +20,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SelectSheet } from '@/components/ui/select-sheet';
 
 import {
   JERSEY_TYPES, JERSEY_QUALITIES, JERSEY_SIZES, CONDITIONS,
@@ -208,12 +206,12 @@ export function JerseyForm({ jersey, onSuccess, onCancel }) {
               name="season"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue placeholder={t('form.season')} /></SelectTrigger>
-                  <SelectContent>
-                    {SEASONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('form.season')}
+                  options={SEASONS.map((s) => ({ value: s, label: s }))}
+                />
               )}
             />
           </FormField>
@@ -223,12 +221,12 @@ export function JerseyForm({ jersey, onSuccess, onCancel }) {
               name="type"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue placeholder={t('jersey.type')} /></SelectTrigger>
-                  <SelectContent>
-                    {JERSEY_TYPES.map((jt) => <SelectItem key={jt} value={jt}>{translateJerseyType(jt)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('jersey.type')}
+                  options={JERSEY_TYPES.map((jt) => ({ value: jt, label: translateJerseyType(jt) }))}
+                />
               )}
             />
           </FormField>
@@ -238,12 +236,12 @@ export function JerseyForm({ jersey, onSuccess, onCancel }) {
               name="quality"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue placeholder={t('jersey.quality')} /></SelectTrigger>
-                  <SelectContent>
-                    {JERSEY_QUALITIES.map((q) => <SelectItem key={q} value={q}>{translateJerseyQuality(q)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('jersey.quality')}
+                  options={JERSEY_QUALITIES.map((q) => ({ value: q, label: translateJerseyQuality(q) }))}
+                />
               )}
             />
           </FormField>
@@ -253,12 +251,12 @@ export function JerseyForm({ jersey, onSuccess, onCancel }) {
               name="condition"
               control={control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger><SelectValue placeholder={t('jersey.condition')} /></SelectTrigger>
-                  <SelectContent>
-                    {CONDITIONS.map((c) => <SelectItem key={c} value={c}>{translateCondition(c)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder={t('jersey.condition')}
+                  options={CONDITIONS.map((c) => ({ value: c, label: translateCondition(c) }))}
+                />
               )}
             />
           </FormField>
@@ -430,17 +428,13 @@ export function JerseyForm({ jersey, onSuccess, onCancel }) {
         <div className="space-y-2">
           {sizeVariants.map((v, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <Select
+              <SelectSheet
                 value={v.size}
                 onValueChange={(val) => updateVariant(i, 'size', val)}
-              >
-                <SelectTrigger className="w-28">
-                  <SelectValue placeholder={t('form.size')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {JERSEY_SIZES.map((s) => <SelectItem key={s} value={s}>{translateJerseySize(s)}</SelectItem>)}
-                </SelectContent>
-              </Select>
+                placeholder={t('form.size')}
+                options={JERSEY_SIZES.map((s) => ({ value: s, label: translateJerseySize(s) }))}
+                className="w-28"
+              />
               <Input
                 type="number"
                 min="0"

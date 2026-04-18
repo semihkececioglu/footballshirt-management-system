@@ -16,10 +16,10 @@ import { toast } from 'sonner';
 import { plannerService } from '@/services/api';
 
 export const PLAN_TYPES = {
-  share: { label: 'Paylaşım', icon: Share2, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
-  list: { label: 'Listeleme', icon: ShoppingCart, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' },
-  photo: { label: 'Fotoğraf', icon: Camera, color: 'text-purple-500', bg: 'bg-purple-500/10 border-purple-500/20' },
-  task: { label: 'Görev', icon: CheckSquare, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
+  share: { icon: Share2, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
+  list: { icon: ShoppingCart, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' },
+  photo: { icon: Camera, color: 'text-purple-500', bg: 'bg-purple-500/10 border-purple-500/20' },
+  task: { icon: CheckSquare, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
 };
 
 function PlanCard({ item, onEdit, onDelete, onToggle }) {
