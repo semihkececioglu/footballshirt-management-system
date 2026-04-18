@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
   Trash2, Plus, Search, Pencil, MoreVertical,
-  CalendarIcon, X,
+  CalendarIcon, X, RotateCcw,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/common/DataTable/DataTable';
@@ -14,11 +15,10 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+  ResponsiveModal, ResponsiveModalContent, ResponsiveModalHeader, ResponsiveModalTitle, ResponsiveModalFooter,
+} from '@/components/ui/responsive-modal';
+import { SelectSheet } from '@/components/ui/select-sheet';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   AlertDialog, AlertDialogContent,
   AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
@@ -28,12 +28,17 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { saleService, jerseyService } from '@/services/api';
+import { JerseyDetailDialog } from '@/components/common/JerseyDetail/JerseyDetailDialog';
+import { Combobox } from '@/components/ui/combobox';
 import { TeamSelector } from '@/components/common/TeamSelector/TeamSelector';
+import { Textarea } from '@/components/ui/textarea';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { formatDate } from '@/lib/utils';
 import { useFormatCurrency } from '@/hooks/useFormatCurrency';
 import { useTranslateConstant } from '@/hooks/useTranslateConstant';
 import { PLATFORMS, PAYMENT_METHODS, JERSEY_SIZES, JERSEY_TYPES, SEASONS } from '@/lib/constants';
 import { tr } from 'date-fns/locale';
+import { LazyImage } from '@/components/common/LazyImage/LazyImage';
 
 const EMPTY_FORM = {
   jerseyId: '', teamName: '', season: '', type: '', brand: '',
@@ -44,8 +49,7 @@ const EMPTY_FORM = {
 
 function MainThumb({ images }) {
   const main = images?.find((i) => i.isMain) || images?.[0];
-  if (!main?.url) return <div className="w-10 h-12 rounded bg-[var(--bg-secondary)]" />;
-  return <img src={main.url} alt="" className="w-10 h-12 object-cover rounded" loading="lazy" />;
+  return <LazyImage src={main?.url} alt="" className="w-10 h-12 object-cover rounded" containerClassName="w-10 h-12 rounded" />;
 }
 
 function getPresetRange(preset) {
@@ -66,9 +70,9 @@ function toIsoDate(date) {
   return date.toISOString().split('T')[0];
 }
 
-function formatShort(dateStr) {
+function formatShort(dateStr, lang = 'tr') {
   if (!dateStr) return '';
-  return new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr));
+  return new Intl.DateTimeFormat(lang, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr));
 }
 
 export default function SoldPage() {
@@ -121,6 +125,10 @@ export default function SoldPage() {
   const [selectedJersey, setSelectedJersey] = useState(null);
   const [manualMode, setManualMode] = useState(false);
   const [teamSelectorData, setTeamSelectorData] = useState({ country: '', league: '', teamName: '' });
+  const [detailItem, setDetailItem] = useState(null);
+  const [returnItem, setReturnItem] = useState(null);
+  const [returnForm, setReturnForm] = useState({ returnReason: '', refundAmount: '' });
+  const [returning, setReturning] = useState(false);
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const [dateRange, setDateRange] = useState({
     from: dateFrom ? new Date(dateFrom) : undefined,
@@ -232,14 +240,33 @@ export default function SoldPage() {
     }
   }
 
+  async function handleReturn() {
+    if (!returnItem) return;
+    setReturning(true);
+    try {
+      await saleService.markAsReturned(returnItem._id, {
+        returnReason: returnForm.returnReason,
+        refundAmount: returnForm.refundAmount ? Number(returnForm.refundAmount) : undefined,
+      });
+      toast.success(t('sold.returnSuccess'));
+      setReturnItem(null);
+      setReturnForm({ returnReason: '', refundAmount: '' });
+      load();
+    } catch {
+      toast.error(t('sold.returnError'));
+    } finally {
+      setReturning(false);
+    }
+  }
+
   function openEdit(sale) {
     const jersey = sale.jerseyId;
     setEditSale(sale);
     setForm({
       jerseyId: jersey?._id || sale.jerseyId || '',
-      teamName: sale.teamName || '',
-      season: sale.season || '',
-      type: sale.type || '',
+      teamName: jersey?.teamName || sale.teamName || '',
+      season: jersey?.season || sale.season || '',
+      type: jersey?.type || sale.type || '',
       brand: sale.brand || '',
       buyerName: sale.buyerName || '',
       buyerUsername: sale.buyerUsername || '',
@@ -251,6 +278,11 @@ export default function SoldPage() {
       soldAt: sale.soldAt ? sale.soldAt.slice(0, 10) : '',
       soldSize: sale.soldSize || '',
       notes: sale.notes || '',
+    });
+    setTeamSelectorData({
+      country: jersey?.country || '',
+      league: jersey?.league || '',
+      teamName: jersey?.teamName || sale.teamName || '',
     });
     setSelectedJersey(jersey || null);
     setJerseySearch(jersey?.teamName || '');
@@ -291,17 +323,18 @@ export default function SoldPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!manualMode && !form.jerseyId) { toast.error(t('sold.toast.jerseyRequired')); return; }
-    if (manualMode && !form.teamName.trim()) { toast.error(t('sold.toast.teamRequired')); return; }
+    if (!editSale && !manualMode && !form.jerseyId) { toast.error(t('sold.toast.jerseyRequired')); return; }
+    if (!editSale && manualMode && !form.teamName.trim()) { toast.error(t('sold.toast.teamRequired')); return; }
+    if (editSale && !form.teamName.trim()) { toast.error(t('sold.toast.teamRequired')); return; }
     if (!form.salePrice) { toast.error(t('sold.toast.priceRequired')); return; }
     setSaving(true);
     try {
       const payload = {
         ...form,
         jerseyId: manualMode ? undefined : form.jerseyId || undefined,
-        teamName: manualMode ? form.teamName.trim() : undefined,
-        season: manualMode ? form.season || undefined : undefined,
-        type: manualMode ? form.type || undefined : undefined,
+        teamName: (manualMode || editSale) ? (form.teamName.trim() || undefined) : undefined,
+        season: (manualMode || editSale) ? (form.season || undefined) : undefined,
+        type: (manualMode || editSale) ? (form.type || undefined) : undefined,
         brand: form.brand || undefined,
         salePrice: Number(form.salePrice),
         buyPrice: form.buyPrice ? Number(form.buyPrice) : 0,
@@ -324,41 +357,52 @@ export default function SoldPage() {
   }
 
   const dateLabel = dateFrom && dateTo
-    ? `${formatShort(dateFrom)} – ${formatShort(dateTo)}`
+    ? `${formatShort(dateFrom, i18n.language)} – ${formatShort(dateTo, i18n.language)}`
     : t('sold.dateRange');
 
   const columns = [
     {
       key: '_thumb',
       label: '',
-      render: (_, row) => <MainThumb images={row.jerseyId?.images} />,
+      render: (_, row) => {
+        const jersey = row.jerseyId;
+        return (
+          <div
+            className={jersey ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+            onClick={jersey ? (e) => { e.stopPropagation(); setDetailItem(jersey); } : undefined}
+          >
+            <MainThumb images={jersey?.images} />
+          </div>
+        );
+      },
       className: 'w-14',
     },
     {
       key: 'jerseyId',
       label: t('sold.col.jersey'),
-      render: (v, row) => (
-        <div className="flex items-center gap-2">
+      render: (v, row) => {
+        const name = v?.teamName || row.teamName || '—';
+        const subtitle = [v?.season || row.season, translateJerseyType(v?.type || row.type)].filter(Boolean).join(' · ');
+        return (
           <div>
-            <p className="font-medium text-sm text-[var(--text-primary)]">{v?.teamName || row.teamName || '—'}</p>
-            <p className="text-xs text-[var(--text-muted)]">
-              {[v?.season || row.season, translateJerseyType(v?.type || row.type)].filter(Boolean).join(' · ')}
-            </p>
+            <p className="font-medium text-[var(--text-primary)]">{name}</p>
+            {subtitle && <p className="text-xs text-[var(--text-muted)] mt-0.5">{subtitle}</p>}
           </div>
+        );
+      },
+    },
+    {
+      key: 'buyerName',
+      label: t('sold.buyer'),
+      render: (v, row) => (
+        <div>
+          <p className="text-[var(--text-primary)]">{v || '—'}</p>
+          {row.buyerUsername && <p className="text-xs text-[var(--text-muted)]">@{row.buyerUsername}</p>}
         </div>
       ),
     },
-    { key: 'buyerName', label: t('sold.buyer'), render: (v) => v || '—' },
-    { key: 'buyerUsername', label: t('sold.col.username'), className: 'hidden md:table-cell', render: (v) => v ? `@${v}` : '—' },
     { key: 'platform', label: t('sold.platform'), className: 'hidden sm:table-cell', render: (v) => v ? translatePlatform(v) : '—' },
     { key: 'soldSize', label: t('sold.size'), className: 'hidden sm:table-cell', render: (v) => v || '—' },
-    { key: 'paymentMethod', label: t('sold.paymentMethod'), className: 'hidden lg:table-cell', render: (v) => v ? translatePaymentMethod(v) : '—' },
-    {
-      key: 'buyPrice',
-      label: t('sold.col.buyPrice'),
-      className: 'hidden lg:table-cell',
-      render: (v) => v > 0 ? <span className="text-[var(--text-muted)]">{formatCurrency(v)}</span> : '—',
-    },
     {
       key: 'salePrice',
       label: t('sold.col.sellPrice'),
@@ -378,32 +422,39 @@ export default function SoldPage() {
       },
     },
     {
-      key: 'soldAt',
-      label: t('sold.col.date'),
-      sortable: true,
-      render: (v) => formatDate(v),
-    },
-    {
       key: '_actions',
       label: '',
-      className: 'w-10',
+      className: 'w-28 text-right',
       render: (_, row) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()}>
-              <MoreVertical size={14} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(row)}>
-              <Pencil size={13} className="mr-2" /> {t('common.edit')}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setDeleteId(row._id)} className="text-red-600">
-              <Trash2 size={13} className="mr-2" /> {t('common.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center justify-end gap-1">
+          {row.isReturned && (
+            <span title={t('sold.returned')}>
+              <RotateCcw size={12} className="text-red-500" />
+            </span>
+          )}
+          <span className="text-xs text-[var(--text-muted)] hidden md:block whitespace-nowrap">{formatDate(row.soldAt)}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" onClick={(e) => e.stopPropagation()}>
+                <MoreVertical size={14} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => openEdit(row)}>
+                <Pencil size={13} className="mr-2" /> {t('common.edit')}
+              </DropdownMenuItem>
+              {!row.isReturned && (
+                <DropdownMenuItem onClick={() => { setReturnItem(row); setReturnForm({ returnReason: '', refundAmount: '' }); }} className="text-orange-600">
+                  <RotateCcw size={13} className="mr-2" /> {t('sold.markAsReturned')}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDeleteId(row._id)} className="text-red-600">
+                <Trash2 size={13} className="mr-2" /> {t('common.delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];
@@ -422,29 +473,23 @@ export default function SoldPage() {
           />
         </div>
 
-        <Select value={platform || '__all__'} onValueChange={(v) => setParam('platform', v === '__all__' ? null : v)}>
-          <SelectTrigger className="w-36 h-9">
-            <SelectValue placeholder={t('sold.placeholder.platform')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">{t('common.all')} {t('sold.platform')}</SelectItem>
-            {(filterOptions.platforms?.length ? filterOptions.platforms : PLATFORMS).map((p) => (
-              <SelectItem key={p} value={p}>{translatePlatform(p)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectSheet
+          value={platform}
+          onValueChange={(v) => setParam('platform', v || null)}
+          placeholder={t('sold.placeholder.platform')}
+          options={(filterOptions.platforms?.length ? filterOptions.platforms : PLATFORMS).map((p) => ({ value: p, label: translatePlatform(p) }))}
+          className="w-36 h-9"
+          label={t('sold.platform')}
+        />
 
-        <Select value={paymentMethod || '__all__'} onValueChange={(v) => setParam('paymentMethod', v === '__all__' ? null : v)}>
-          <SelectTrigger className="w-36 h-9">
-            <SelectValue placeholder={t('sold.placeholder.payment')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">{t('sold.form.allPayments')}</SelectItem>
-            {(filterOptions.paymentMethods?.length ? filterOptions.paymentMethods : PAYMENT_METHODS).map((m) => (
-              <SelectItem key={m} value={m}>{translatePaymentMethod(m)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectSheet
+          value={paymentMethod}
+          onValueChange={(v) => setParam('paymentMethod', v || null)}
+          placeholder={t('sold.placeholder.payment')}
+          options={(filterOptions.paymentMethods?.length ? filterOptions.paymentMethods : PAYMENT_METHODS).map((m) => ({ value: m, label: translatePaymentMethod(m) }))}
+          className="w-36 h-9"
+          label={t('sold.paymentMethod')}
+        />
 
         {/* Date range picker */}
         <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
@@ -510,16 +555,14 @@ export default function SoldPage() {
         </Popover>
 
         {/* Sort */}
-        <Select value={sort} onValueChange={(v) => setParam('sort', v !== '-soldAt' ? v : null)}>
-          <SelectTrigger className="w-40 h-9">
-            <SelectValue placeholder={t('sort.label')} />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SelectSheet
+          value={sort || '-soldAt'}
+          onValueChange={(v) => setParam('sort', (v && v !== '-soldAt') ? v : null)}
+          placeholder={t('sort.label')}
+          options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          className="w-40 h-9"
+          label={t('sort.label')}
+        />
 
         {activeFilterCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-[var(--text-muted)]">
@@ -548,11 +591,11 @@ export default function SoldPage() {
 
       <Pagination page={page} total={total} limit={LIMIT} onChange={(p) => setParam('page', p > 1 ? p : null)} />
 
-      <Dialog open={formOpen} onOpenChange={(o) => { if (!o) closeForm(); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editSale ? t('sold.editSale') : t('sold.addSale')}</DialogTitle>
-          </DialogHeader>
+      <ResponsiveModal open={formOpen} onOpenChange={(o) => { if (!o) closeForm(); }}>
+        <ResponsiveModalContent className="max-w-lg">
+          <ResponsiveModalHeader>
+            <ResponsiveModalTitle>{editSale ? t('sold.editSale') : t('sold.addSale')}</ResponsiveModalTitle>
+          </ResponsiveModalHeader>
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -575,15 +618,35 @@ export default function SoldPage() {
                 )}
               </div>
               {editSale ? (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-[var(--border)] bg-[var(--bg-secondary)]">
-                  {selectedJersey?.images?.[0]?.url && (
-                    <img src={selectedJersey.images[0].url} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{selectedJersey?.teamName || form.teamName || '—'}</p>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {[selectedJersey?.season, translateJerseyType(selectedJersey?.type)].filter(Boolean).join(' · ')}
-                    </p>
+                <div className="space-y-2">
+                  <TeamSelector
+                    value={teamSelectorData}
+                    onChange={(val) => {
+                      setTeamSelectorData(val);
+                      setForm((p) => ({ ...p, teamName: val.teamName || '' }));
+                    }}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">{t('form.season')}</Label>
+                      <SelectSheet
+                        value={form.season}
+                        onValueChange={(v) => setForm((p) => ({ ...p, season: v }))}
+                        placeholder="—"
+                        options={SEASONS.map((s) => ({ value: s, label: s }))}
+                        label={t('form.season')}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">{t('jersey.type')}</Label>
+                      <SelectSheet
+                        value={form.type}
+                        onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}
+                        placeholder="—"
+                        options={JERSEY_TYPES.map((tp) => ({ value: tp, label: translateJerseyType(tp) }))}
+                        label={t('jersey.type')}
+                      />
+                    </div>
                   </div>
                 </div>
               ) : manualMode ? (
@@ -598,23 +661,23 @@ export default function SoldPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">{t('form.season')}</Label>
-                      <Select value={form.season || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, season: v === '__none__' ? '' : v }))}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">—</SelectItem>
-                          {SEASONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <SelectSheet
+                        value={form.season}
+                        onValueChange={(v) => setForm((p) => ({ ...p, season: v }))}
+                        placeholder="—"
+                        options={SEASONS.map((s) => ({ value: s, label: s }))}
+                        label={t('form.season')}
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">{t('jersey.type')}</Label>
-                      <Select value={form.type || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, type: v === '__none__' ? '' : v }))}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">—</SelectItem>
-                          {JERSEY_TYPES.map((tp) => <SelectItem key={tp} value={tp}>{translateJerseyType(tp)}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <SelectSheet
+                        value={form.type}
+                        onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}
+                        placeholder="—"
+                        options={JERSEY_TYPES.map((tp) => ({ value: tp, label: translateJerseyType(tp) }))}
+                        label={t('jersey.type')}
+                      />
                     </div>
                   </div>
                 </div>
@@ -624,21 +687,22 @@ export default function SoldPage() {
                     placeholder={t('sold.placeholder.jerseySearch')}
                     value={jerseySearch}
                     onChange={(e) => searchJerseys(e.target.value)}
+                    onBlur={() => setTimeout(() => setJerseyResults([]), 150)}
                   />
                   {jerseyResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-50 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-md shadow-lg max-h-48 overflow-y-auto">
                       {jerseyResults.map((j) => (
                         <button
                           key={j._id}
                           type="button"
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[var(--bg-secondary)] text-sm"
-                          onClick={() => selectJersey(j)}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-[var(--bg-secondary)] text-sm rounded-md"
+                          onMouseDown={(e) => { e.preventDefault(); selectJersey(j); }}
                         >
                           {j.images?.[0]?.url && (
-                            <img src={j.images[0].url} alt="" className="w-8 h-10 object-cover rounded" />
+                            <img src={j.images[0].url} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
                           )}
-                          <div>
-                            <p className="font-medium text-[var(--text-primary)]">{j.teamName}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-[var(--text-primary)] truncate">{j.teamName}</p>
                             <p className="text-xs text-[var(--text-muted)]">{[j.season, translateJerseyType(j.type)].filter(Boolean).join(' · ')}</p>
                           </div>
                         </button>
@@ -657,44 +721,66 @@ export default function SoldPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>{t('sold.buyer')}</Label>
-                <Input value={form.buyerName} onChange={(e) => setForm((p) => ({ ...p, buyerName: e.target.value }))} placeholder={t('sold.placeholder.buyerName')} />
+                <Combobox
+                  options={filterOptions.buyerNames || []}
+                  value={form.buyerName}
+                  onChange={(v) => setForm((p) => ({ ...p, buyerName: v }))}
+                  placeholder={t('sold.placeholder.buyerName')}
+                  allowCustom
+                  clearable
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('sold.form.username')}</Label>
-                <Input value={form.buyerUsername} onChange={(e) => setForm((p) => ({ ...p, buyerUsername: e.target.value }))} placeholder={t('sold.placeholder.buyerUsername')} />
+                <Combobox
+                  options={filterOptions.buyerUsernames || []}
+                  value={form.buyerUsername}
+                  onChange={(v) => setForm((p) => ({ ...p, buyerUsername: v }))}
+                  placeholder={t('sold.placeholder.buyerUsername')}
+                  allowCustom
+                  clearable
+                />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>{t('sold.form.buyerPhone')}</Label>
+              <PhoneInput
+                value={form.buyerPhone}
+                onChange={(v) => setForm((p) => ({ ...p, buyerPhone: v }))}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>{t('sold.platform')}</Label>
-                <Select value={form.platform || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, platform: v === '__none__' ? '' : v }))}>
-                  <SelectTrigger><SelectValue placeholder={t('sold.placeholder.select')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {PLATFORMS.map((p) => <SelectItem key={p} value={p}>{translatePlatform(p)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={form.platform}
+                  onValueChange={(v) => setForm((p) => ({ ...p, platform: v }))}
+                  placeholder={t('sold.placeholder.select')}
+                  options={PLATFORMS.map((p) => ({ value: p, label: translatePlatform(p) }))}
+                  clearable
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('sold.size')}</Label>
-                <Select value={form.soldSize || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, soldSize: v === '__none__' ? '' : v }))}>
-                  <SelectTrigger><SelectValue placeholder={t('sold.placeholder.select')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {JERSEY_SIZES.map((s) => <SelectItem key={s} value={s}>{translateJerseySize(s)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={form.soldSize}
+                  onValueChange={(v) => setForm((p) => ({ ...p, soldSize: v }))}
+                  placeholder={t('sold.placeholder.select')}
+                  options={JERSEY_SIZES.map((s) => ({ value: s, label: translateJerseySize(s) }))}
+                  clearable
+                />
               </div>
               <div className="col-span-2 space-y-1.5">
                 <Label>{t('jersey.brand')}</Label>
-                <Select value={form.brand || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, brand: v === '__none__' ? '' : v }))}>
-                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {allBrands.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={form.brand}
+                  onValueChange={(v) => setForm((p) => ({ ...p, brand: v }))}
+                  placeholder="—"
+                  options={allBrands.map((b) => ({ value: b, label: b }))}
+                  clearable
+                />
               </div>
             </div>
 
@@ -718,27 +804,41 @@ export default function SoldPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>{t('sold.paymentMethod')}</Label>
-                <Select value={form.paymentMethod || '__none__'} onValueChange={(v) => setForm((p) => ({ ...p, paymentMethod: v === '__none__' ? '' : v }))}>
-                  <SelectTrigger><SelectValue placeholder={t('sold.placeholder.select')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">—</SelectItem>
-                    {PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{translatePaymentMethod(m)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <SelectSheet
+                  value={form.paymentMethod}
+                  onValueChange={(v) => setForm((p) => ({ ...p, paymentMethod: v }))}
+                  placeholder={t('sold.placeholder.select')}
+                  options={PAYMENT_METHODS.map((m) => ({ value: m, label: translatePaymentMethod(m) }))}
+                  clearable
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>{t('sold.saleDate')}</Label>
-                <Input type="date" value={form.soldAt} onChange={(e) => setForm((p) => ({ ...p, soldAt: e.target.value }))} />
+                <DatePicker
+                  value={form.soldAt}
+                  onChange={(date) => setForm((p) => ({ ...p, soldAt: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                  placeholder={t('sold.saleDate')}
+                />
               </div>
             </div>
 
-            <DialogFooter>
+            <div className="space-y-1.5">
+              <Label>{t('common.notes')}</Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                placeholder={t('form.additionalNotes')}
+                rows={2}
+              />
+            </div>
+
+            <ResponsiveModalFooter>
               <Button type="button" variant="outline" onClick={closeForm}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saving}>{saving ? t('common.saving') : t('common.save')}</Button>
-            </DialogFooter>
+            </ResponsiveModalFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveModalContent>
+      </ResponsiveModal>
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
@@ -752,6 +852,57 @@ export default function SoldPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <JerseyDetailDialog
+        jersey={detailItem}
+        open={!!detailItem}
+        onClose={() => setDetailItem(null)}
+        mode="admin"
+      />
+
+      {/* Return dialog */}
+      <ResponsiveModal open={!!returnItem} onOpenChange={(o) => { if (!o) setReturnItem(null); }}>
+        <ResponsiveModalContent className="max-w-sm">
+          <ResponsiveModalHeader>
+            <ResponsiveModalTitle>{t('sold.markAsReturned')}</ResponsiveModalTitle>
+          </ResponsiveModalHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-[var(--text-secondary)]">
+              {returnItem && (returnItem.jerseyId?.teamName || returnItem.teamName || '—')}
+            </p>
+            <div className="space-y-1.5">
+              <Label>{t('sold.returnReason')}</Label>
+              <SelectSheet
+                value={returnForm.returnReason}
+                onValueChange={(v) => setReturnForm((p) => ({ ...p, returnReason: v }))}
+                placeholder={t('common.select')}
+                options={[
+                  { value: 'Kusurlu', label: t('sold.returnReasons.defective') },
+                  { value: 'Müşteri İsteği', label: t('sold.returnReasons.customerRequest') },
+                  { value: 'Yanlış Ürün', label: t('sold.returnReasons.wrongItem') },
+                  { value: 'Diğer', label: t('sold.returnReasons.other') },
+                ]}
+                label={t('sold.returnReason')}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('sold.refundAmount')}</Label>
+              <Input
+                type="number"
+                value={returnForm.refundAmount}
+                onChange={(e) => setReturnForm((p) => ({ ...p, refundAmount: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <ResponsiveModalFooter>
+            <Button variant="outline" onClick={() => setReturnItem(null)}>{t('common.cancel')}</Button>
+            <Button onClick={handleReturn} disabled={returning} className="bg-orange-600 hover:bg-orange-700">
+              {returning ? t('common.saving') : t('sold.markAsReturned')}
+            </Button>
+          </ResponsiveModalFooter>
+        </ResponsiveModalContent>
+      </ResponsiveModal>
     </div>
   );
 }

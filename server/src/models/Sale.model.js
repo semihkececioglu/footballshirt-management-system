@@ -18,6 +18,10 @@ const saleSchema = new mongoose.Schema(
     soldAt: { type: Date, default: Date.now, index: true },
     soldSize: String,
     notes: String,
+    isReturned: { type: Boolean, default: false },
+    returnedAt: Date,
+    returnReason: String,
+    refundAmount: Number,
   },
   { timestamps: true }
 );

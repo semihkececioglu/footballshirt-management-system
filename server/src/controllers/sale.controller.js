@@ -71,11 +71,13 @@ export async function getSales(req, res, next) {
 
 export async function getSaleFilterOptions(req, res, next) {
   try {
-    const [platforms, paymentMethods, types, brands] = await Promise.all([
+    const [platforms, paymentMethods, types, brands, buyerNames, buyerUsernames] = await Promise.all([
       Sale.distinct('platform'),
       Sale.distinct('paymentMethod'),
       Sale.distinct('type'),
       Sale.distinct('brand'),
+      Sale.distinct('buyerName'),
+      Sale.distinct('buyerUsername'),
     ]);
     const clean = (arr) => arr.filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
     res.json({
@@ -85,6 +87,8 @@ export async function getSaleFilterOptions(req, res, next) {
         paymentMethods: clean(paymentMethods),
         types: clean(types),
         brands: clean(brands),
+        buyerNames: clean(buyerNames),
+        buyerUsernames: clean(buyerUsernames),
       },
     });
   } catch (err) {
@@ -116,6 +120,21 @@ export async function deleteSale(req, res, next) {
   try {
     await Sale.findByIdAndDelete(req.params.id);
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function markAsReturned(req, res, next) {
+  try {
+    const { returnReason, refundAmount } = req.body;
+    const sale = await Sale.findByIdAndUpdate(
+      req.params.id,
+      { isReturned: true, returnedAt: new Date(), returnReason, refundAmount },
+      { new: true }
+    );
+    if (!sale) return next(createError('Satış bulunamadı', 404));
+    res.json({ success: true, data: sale });
   } catch (err) {
     next(err);
   }
