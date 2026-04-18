@@ -11,11 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
+  ResponsiveModal, ResponsiveModalContent, ResponsiveModalHeader, ResponsiveModalTitle, ResponsiveModalFooter,
+} from '@/components/ui/responsive-modal';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { SelectSheet } from '@/components/ui/select-sheet';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { ReminderStatusBadge } from '@/components/common/StatusBadge/StatusBadge';
 import { FormField } from '@/components/forms/JerseyForm/FormField';
@@ -26,7 +27,8 @@ import {
 import {
   Tooltip, TooltipProvider, TooltipTrigger, TooltipContent,
 } from '@/components/ui/tooltip';
-import { reminderService } from '@/services/api';
+import { reminderService, sellerService } from '@/services/api';
+import { Combobox } from '@/components/ui/combobox';
 import { formatDate, getWhatsAppUrl } from '@/lib/utils';
 
 const EMPTY_FORM = {
@@ -63,6 +65,7 @@ export default function RemindersPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [contactNameOptions, setContactNameOptions] = useState([]);
 
   function setParam(key, value, replace = true) {
     setSearchParams((prev) => {
@@ -102,6 +105,24 @@ export default function RemindersPage() {
   }, [t]);
 
   useEffect(() => { load(activeTab); }, [activeTab, load]);
+
+  // Load seller names for contactName autocomplete
+  useEffect(() => {
+    sellerService.getAll().then((res) => {
+      const sellers = res.data.data || [];
+      setContactNameOptions(sellers.map((s) => ({ value: s.name, label: s.name })));
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Merge unique contact names from loaded reminders
+  useEffect(() => {
+    const fromReminders = [...new Set(reminders.map((r) => r.contactName).filter(Boolean))];
+    setContactNameOptions((prev) => {
+      const existing = new Set(prev.map((o) => o.value));
+      const extra = fromReminders.filter((n) => !existing.has(n)).map((n) => ({ value: n, label: n }));
+      return extra.length > 0 ? [...prev, ...extra] : prev;
+    });
+  }, [reminders]);
 
   // Handle modal=edit — find reminder in list
   useEffect(() => {
@@ -392,19 +413,22 @@ export default function RemindersPage() {
       </AlertDialog>
 
       {/* Form Dialog */}
-      <Dialog open={formOpen} onOpenChange={(o) => { if (!o) clearModal(); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
+      <ResponsiveModal open={formOpen} onOpenChange={(o) => { if (!o) clearModal(); }}>
+        <ResponsiveModalContent className="max-w-lg">
+          <ResponsiveModalHeader>
+            <ResponsiveModalTitle>
               {editReminder ? t('reminders.editReminder') : t('reminders.addReminder')}
-            </DialogTitle>
-          </DialogHeader>
+            </ResponsiveModalTitle>
+          </ResponsiveModalHeader>
           <form onSubmit={handleSubmit} className="space-y-4 py-2">
             <FormField label={t('reminders.form.contactName')} required>
-              <Input
+              <Combobox
+                options={contactNameOptions}
                 value={form.contactName}
-                onChange={(e) => setField('contactName', e.target.value)}
+                onChange={(v) => setField('contactName', v || '')}
                 placeholder={t('reminders.form.contactNamePlaceholder')}
+                allowCustom
+                clearable
               />
             </FormField>
 
@@ -487,29 +511,30 @@ export default function RemindersPage() {
             </div>
 
             <FormField label={t('common.status')}>
-              <Select value={form.status} onValueChange={(v) => setField('status', v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="open">{t('reminderStatus.open')}</SelectItem>
-                  <SelectItem value="notified">{t('reminderStatus.notified')}</SelectItem>
-                  <SelectItem value="closed">{t('reminderStatus.closed')}</SelectItem>
-                </SelectContent>
-              </Select>
+              <SelectSheet
+                value={form.status}
+                onValueChange={(v) => v && setField('status', v)}
+                placeholder="—"
+                options={[
+                  { value: 'open', label: t('reminderStatus.open') },
+                  { value: 'notified', label: t('reminderStatus.notified') },
+                  { value: 'closed', label: t('reminderStatus.closed') },
+                ]}
+                label={t('common.status')}
+              />
             </FormField>
 
-            <DialogFooter>
+            <ResponsiveModalFooter>
               <Button type="button" variant="outline" onClick={clearModal}>
                 {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? t('common.saving') : editReminder ? t('common.save') : t('common.add')}
               </Button>
-            </DialogFooter>
+            </ResponsiveModalFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveModalContent>
+      </ResponsiveModal>
     </div>
   );
 }
