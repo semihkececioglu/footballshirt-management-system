@@ -11,9 +11,15 @@ function toArr(val) {
 
 export async function getPurchases(req, res, next) {
   try {
-    const { isForResale, search, type, quality, size, condition, brand, sort = '-purchaseDate', page = 1, limit = 50 } = req.query;
+    const { isForResale, search, sellerName, type, quality, size, condition, brand, dateFrom, dateTo, sort = '-purchaseDate', page = 1, limit = 50 } = req.query;
     const filter = {};
     if (isForResale !== undefined) filter.isForResale = isForResale === 'true';
+
+    if (dateFrom || dateTo) {
+      filter.purchaseDate = {};
+      if (dateFrom) filter.purchaseDate.$gte = new Date(dateFrom);
+      if (dateTo) { const e = new Date(dateTo); e.setHours(23, 59, 59, 999); filter.purchaseDate.$lte = e; }
+    }
 
     const types = toArr(type); if (types) filter.type = types.length === 1 ? types[0] : { $in: types };
     const qualities = toArr(quality); if (qualities) filter.quality = qualities.length === 1 ? qualities[0] : { $in: qualities };
@@ -21,9 +27,8 @@ export async function getPurchases(req, res, next) {
     const conditions = toArr(condition); if (conditions) filter.condition = conditions.length === 1 ? conditions[0] : { $in: conditions };
     const brands = toArr(brand); if (brands) filter.brand = brands.length === 1 ? brands[0] : { $in: brands };
 
-    if (search) {
-      filter.teamName = { $regex: search, $options: 'i' };
-    }
+    if (search) filter.teamName = { $regex: search, $options: 'i' };
+    if (sellerName) filter.sellerName = { $regex: sellerName, $options: 'i' };
 
     const skip = (Number(page) - 1) * Number(limit);
     const [purchases, total] = await Promise.all([
@@ -38,17 +43,20 @@ export async function getPurchases(req, res, next) {
 
 export async function getPurchaseFilterOptions(req, res, next) {
   try {
-    const [types, qualities, conditions, brands, sizes] = await Promise.all([
+    const [types, qualities, conditions, brands, sizes, sellerNames, sellerPhones] = await Promise.all([
       Purchase.distinct('type'),
       Purchase.distinct('quality'),
       Purchase.distinct('condition'),
       Purchase.distinct('brand'),
       Purchase.distinct('size'),
+      Purchase.distinct('sellerName'),
+      Purchase.distinct('sellerPhone'),
     ]);
     const clean = (arr) => arr.filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
     res.json({ success: true, data: {
       types: clean(types), qualities: clean(qualities),
       conditions: clean(conditions), brands: clean(brands), sizes: clean(sizes),
+      sellerNames: clean(sellerNames), sellerPhones: clean(sellerPhones),
     }});
   } catch (err) {
     next(err);
@@ -60,11 +68,10 @@ export async function promotePurchase(req, res, next) {
     const purchase = await Purchase.findById(req.params.id);
     if (!purchase) return next(createError('Satın alma bulunamadı', 404));
 
-    const { sellPrice = 0, extraImages = [] } = req.body;
-    const mergedImages = [
-      ...purchase.images,
-      ...(Array.isArray(extraImages) ? extraImages : []),
-    ];
+    const { sellPrice = 0, extraImages = [], images } = req.body;
+    const mergedImages = Array.isArray(images) && images.length > 0
+      ? images
+      : [...purchase.images, ...(Array.isArray(extraImages) ? extraImages : [])];
 
     const jersey = await Jersey.create({
       teamName: purchase.teamName,
@@ -77,7 +84,7 @@ export async function promotePurchase(req, res, next) {
       technology: purchase.technology,
       sponsor: purchase.sponsor,
       productCode: purchase.productCode,
-      size: purchase.size,
+      size: purchase.sizeVariants?.[0]?.size || purchase.size || '',
       measurements: purchase.measurements,
       condition: purchase.condition,
       printing: purchase.printing,
@@ -89,7 +96,9 @@ export async function promotePurchase(req, res, next) {
       sellPrice: Number(sellPrice),
       purchaseDate: purchase.purchaseDate,
       status: 'for_sale',
-      sizeVariants: purchase.size ? [{ size: purchase.size, stockCount: 1 }] : [],
+      sizeVariants: purchase.sizeVariants?.length
+        ? purchase.sizeVariants
+        : purchase.size ? [{ size: purchase.size, stockCount: 1 }] : [],
     });
 
     purchase.linkedJerseyId = jersey._id;
@@ -155,6 +164,17 @@ export async function deletePurchase(req, res, next) {
     const purchase = await Purchase.findByIdAndDelete(req.params.id);
     if (!purchase) return next(createError('Satın alma bulunamadı', 404));
     await Promise.all(purchase.images.map((img) => deleteImage(img.publicId)));
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function bulkDeletePurchases(req, res, next) {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ message: 'ids required' });
+    await Purchase.deleteMany({ _id: { $in: ids } });
     res.json({ success: true });
   } catch (err) {
     next(err);

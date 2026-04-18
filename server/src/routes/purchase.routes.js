@@ -3,12 +3,13 @@ import { authenticate } from '../middleware/auth.middleware.js';
 import { upload } from '../middleware/upload.middleware.js';
 import {
   getPurchases, getPurchaseFilterOptions, promotePurchase, demotePurchase,
-  createPurchase, updatePurchase, deletePurchase,
+  createPurchase, updatePurchase, deletePurchase, bulkDeletePurchases,
 } from '../controllers/purchase.controller.js';
 
 const router = Router();
 router.use(authenticate);
 router.get('/filter-options', getPurchaseFilterOptions);
+router.delete('/bulk', bulkDeletePurchases);
 router.get('/', getPurchases);
 router.post('/', upload.array('images', 10), createPurchase);
 router.post('/:id/promote', promotePurchase);

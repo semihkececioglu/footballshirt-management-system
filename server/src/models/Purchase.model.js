@@ -14,6 +14,7 @@ const purchaseSchema = new mongoose.Schema(
     sponsor: String,
     productCode: String,
     size: String,
+    sizeVariants: [{ size: String, stockCount: { type: Number, default: 1 } }],
     measurements: {
       armpit: Number,
       length: Number,
@@ -33,6 +34,8 @@ const purchaseSchema = new mongoose.Schema(
     isForResale: { type: Boolean, default: false },
     linkedJerseyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Jersey' },
     purchaseDate: { type: Date, default: Date.now },
+    sellerName: String,
+    sellerPhone: String,
     notes: String,
   },
   { timestamps: true }
